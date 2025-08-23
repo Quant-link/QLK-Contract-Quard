@@ -38,7 +38,7 @@ export default function AnalysisResultsPage() {
 
       // Fetch the original code content
       try {
-        const codeResponse = await fetch(`/api/analysis/${analysisId}/code`)
+        const codeResponse = await fetch(`http://localhost:8000/api/analysis/${analysisId}/code`)
         if (codeResponse.ok) {
           const codeData = await codeResponse.json()
           setFileContent(codeData.content)

@@ -263,6 +263,7 @@ async def analyze_contract(file: UploadFile = File(...)):
                 id=analysis_id,
                 filename=file.filename,
                 file_hash=file_hash,
+                file_content=content_str,  # Store original content
                 language=language,
                 file_size=len(content),
                 status="COMPLETED",
@@ -550,101 +551,14 @@ async def get_analysis_code(analysis_id: str, db: Session = Depends(get_db)):
         if not analysis:
             raise HTTPException(status_code=404, detail="Analysis not found")
 
-        # For demo purposes, return sample code based on language
-        sample_code = ""
-        if analysis.language == "sol":
-            sample_code = """// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
-
-contract VulnerableContract {
-    mapping(address => uint256) public balances;
-    address public owner;
-
-    constructor() {
-        owner = msg.sender;
-    }
-
-    // Vulnerable to reentrancy
-    function withdraw() public {
-        uint256 amount = balances[msg.sender];
-        require(amount > 0, "No balance");
-
-        // External call before state change - VULNERABLE!
-        (bool success, ) = msg.sender.call{value: amount}("");
-        require(success, "Transfer failed");
-
-        balances[msg.sender] = 0; // State change after external call
-    }
-
-    // Missing access control
-    function emergencyWithdraw() public {
-        // Anyone can call this! Should be onlyOwner
-        payable(msg.sender).transfer(address(this).balance);
-    }
-}"""
-        elif analysis.language == "rs":
-            sample_code = """#![cfg_attr(not(feature = "std"), no_std)]
-
-use ink_lang as ink;
-
-#[ink::contract]
-mod vulnerable_contract {
-    #[ink(storage)]
-    pub struct VulnerableContract {
-        balances: ink_storage::Mapping<AccountId, Balance>,
-        owner: AccountId,
-    }
-
-    impl VulnerableContract {
-        #[ink(constructor)]
-        pub fn new() -> Self {
-            Self {
-                balances: ink_storage::Mapping::default(),
-                owner: Self::env().caller(),
-            }
-        }
-
-        // Panic condition - unwrap without checking
-        #[ink(message)]
-        pub fn get_balance(&self, account: AccountId) -> Balance {
-            self.balances.get(&account).unwrap() // VULNERABLE: can panic!
-        }
-    }
-}"""
-        elif analysis.language == "go":
-            sample_code = """package main
-
-import "fmt"
-
-type VulnerableContract struct {
-    balances map[string]uint64
-    owner    string
-}
-
-// Missing error handling
-func (vc *VulnerableContract) GetBalance(addr string) uint64 {
-    balance, _ := vc.balances[addr] // Ignored error
-    return balance
-}
-
-// Panic instead of error return
-func (vc *VulnerableContract) PanicFunction() {
-    panic("Something went wrong") // VULNERABLE: using panic
-}
-
-func main() {
-    contract := &VulnerableContract{
-        balances: make(map[string]uint64),
-        owner:    "initial_owner",
-    }
-    fmt.Println("Contract created:", contract.owner)
-}"""
+        # Return the actual stored file content
+        content = analysis.file_content if analysis.file_content else ""
 
         return {
             "analysis_id": analysis_id,
             "filename": analysis.filename,
             "language": analysis.language,
-            "content": sample_code
+            "content": content
         }
     except Exception as e:
         print(f"Error getting analysis code: {e}")

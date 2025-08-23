@@ -28,6 +28,7 @@ class Analysis(Base):
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     filename = Column(String(255), nullable=False)
     file_hash = Column(String(64), nullable=False)
+    file_content = Column(Text, nullable=True)  # Store original file content
     language = Column(String(20), nullable=False)
     file_size = Column(Integer, nullable=False)
     status = Column(String(20), nullable=False, default="PENDING")
@@ -98,7 +99,10 @@ def get_db() -> Session:
 # Create tables
 def create_tables():
     """Create all database tables"""
+    # Drop and recreate to ensure schema is up to date
+    Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
+    print("✅ Database tables created successfully")
 
 # Initialize database
 def init_db():
