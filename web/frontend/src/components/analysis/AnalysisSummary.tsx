@@ -2,7 +2,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, 
 import { AlertTriangle, Shield, Clock, FileText } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { Badge } from '../ui/badge'
-import { AnalysisMetadata } from '../../../types'
+import { AnalysisMetadata } from '../../types'
 import { formatDate, formatFileSize } from '../../lib/utils'
 
 interface AnalysisSummaryProps {

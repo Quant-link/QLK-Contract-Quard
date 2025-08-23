@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { wsService } from '../../services/api'
+import { wsService } from '../services/api'
 
 interface UseWebSocketOptions {
   autoConnect?: boolean

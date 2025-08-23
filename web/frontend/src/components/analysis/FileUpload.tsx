@@ -1,10 +1,12 @@
 import { useCallback, useState } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { Upload, File, X, AlertCircle } from 'lucide-react'
+import { Upload, File, X, AlertCircle, AlertTriangle } from 'lucide-react'
 import { Button } from '../ui/button'
 import { Card, CardContent } from '../ui/card'
 import { Badge } from '../ui/badge'
+import { Alert, AlertDescription, AlertTitle } from '../ui/alert'
 import { formatFileSize, getFileTypeInfo } from '../../lib/utils'
+import { validateFiles, validateFile } from '../../utils/fileValidation'
 import { UploadedFile } from '../../types'
 
 interface FileUploadProps {
@@ -20,10 +22,12 @@ export default function FileUpload({
 }: FileUploadProps) {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
   const [errors, setErrors] = useState<string[]>([])
+  const [warnings, setWarnings] = useState<string[]>([])
 
   const onDrop = useCallback(async (acceptedFiles: File[], rejectedFiles: any[]) => {
     const newErrors: string[] = []
-    
+    const newWarnings: string[] = []
+
     // Handle rejected files
     rejectedFiles.forEach(({ file, errors }) => {
       errors.forEach((error: any) => {
@@ -37,35 +41,71 @@ export default function FileUpload({
       })
     })
 
-    // Process accepted files
+    // Process accepted files with comprehensive validation
     const processedFiles: UploadedFile[] = []
-    
+
     for (const file of acceptedFiles) {
       try {
         const content = await file.text()
-        const uploadedFile: UploadedFile = {
-          file,
-          content,
-          name: file.name,
-          size: file.size,
-          lastModified: file.lastModified
+
+        // Validate individual file
+        const validationResult = validateFile(file, content, {
+          maxSizeBytes: maxSize * 1024 * 1024,
+          allowedExtensions: ['.sol', '.rs', '.go'],
+          maxLines: 10000,
+          requireContent: true,
+          checkSyntax: true
+        })
+
+        if (!validationResult.isValid) {
+          newErrors.push(...validationResult.errors.map(err => `${file.name}: ${err}`))
         }
-        processedFiles.push(uploadedFile)
+
+        if (validationResult.warnings.length > 0) {
+          newWarnings.push(...validationResult.warnings.map(warn => `${file.name}: ${warn}`))
+        }
+
+        // Only add file if validation passed
+        if (validationResult.isValid) {
+          const uploadedFile: UploadedFile = {
+            file,
+            content,
+            name: file.name,
+            size: file.size,
+            lastModified: file.lastModified
+          }
+          processedFiles.push(uploadedFile)
+        }
       } catch (error) {
-        newErrors.push(`${file.name}: Failed to read file content`)
+        newErrors.push(`${file.name}: Failed to read file content - ${error instanceof Error ? error.message : 'Unknown error'}`)
       }
     }
 
     // Check total file limit
     const totalFiles = uploadedFiles.length + processedFiles.length
     if (totalFiles > maxFiles) {
-      newErrors.push(`Maximum ${maxFiles} files allowed`)
+      newErrors.push(`Maximum ${maxFiles} files allowed. Currently have ${uploadedFiles.length}, trying to add ${processedFiles.length}`)
       return
     }
 
-    setErrors(newErrors)
-    
+    // Validate all files together (check for duplicates, etc.)
     if (processedFiles.length > 0) {
+      const allFiles = [...uploadedFiles, ...processedFiles]
+      const batchValidation = validateFiles(allFiles)
+
+      if (!batchValidation.isValid) {
+        newErrors.push(...batchValidation.errors)
+      }
+
+      if (batchValidation.warnings.length > 0) {
+        newWarnings.push(...batchValidation.warnings)
+      }
+    }
+
+    setErrors(newErrors)
+    setWarnings(newWarnings)
+
+    if (processedFiles.length > 0 && newErrors.length === 0) {
       const updatedFiles = [...uploadedFiles, ...processedFiles]
       setUploadedFiles(updatedFiles)
       onFilesSelected(updatedFiles)
@@ -154,6 +194,21 @@ export default function FileUpload({
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Warning Messages */}
+      {warnings.length > 0 && (
+        <Alert variant="warning">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Warnings</AlertTitle>
+          <AlertDescription>
+            <ul className="list-disc list-inside space-y-1">
+              {warnings.map((warning, index) => (
+                <li key={index}>{warning}</li>
+              ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
       )}
 
       {/* Uploaded Files List */}

@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { apiService, handleApiError } from '../../services/api'
-import { AnalysisResponse } from '../../types'
-import { useToast } from '../../hooks/use-toast'
+import { apiService, handleApiError } from '../services/api'
+import { AnalysisResponse } from '../types'
+import { useToast } from '../hooks/use-toast'
 
 export function useAnalysis() {
   const [isAnalyzing, setIsAnalyzing] = useState(false)

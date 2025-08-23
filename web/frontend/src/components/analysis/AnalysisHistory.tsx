@@ -3,8 +3,9 @@ import { Clock, FileText, Trash2 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
 import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
-import { useAnalysisStore } from '../../../store/analysisStore'
+import { useAnalysisStore } from '../../store/analysisStore'
 import { formatDate, formatFileSize } from '../../lib/utils'
+import { AnalysisResponse } from '../../types'
 
 export default function AnalysisHistory() {
   const { analysisHistory, removeFromHistory, clearHistory } = useAnalysisStore()
@@ -23,7 +24,7 @@ export default function AnalysisHistory() {
     )
   }
 
-  const getRiskBadgeVariant = (metadata: any) => {
+  const getRiskBadgeVariant = (metadata: AnalysisResponse['metadata']) => {
     if (metadata.critical_count > 0) return 'critical'
     if (metadata.high_count > 0) return 'high'
     if (metadata.medium_count > 0) return 'medium'
@@ -31,7 +32,7 @@ export default function AnalysisHistory() {
     return 'info'
   }
 
-  const getRiskLevel = (metadata: any) => {
+  const getRiskLevel = (metadata: AnalysisResponse['metadata']) => {
     if (metadata.critical_count > 0) return 'Critical'
     if (metadata.high_count > 0) return 'High'
     if (metadata.medium_count > 0) return 'Medium'
