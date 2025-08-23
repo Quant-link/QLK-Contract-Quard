@@ -2,10 +2,10 @@ import { useState } from 'react'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { Copy, Check, Maximize2, Minimize2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useTheme } from '@/components/theme-provider'
-import { useToast } from '@/hooks/use-toast'
+import { Button } from '../ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
+import { useTheme } from '../theme-provider'
+import { useToast } from '../../hooks/use-toast'
 
 interface CodeViewerProps {
   code: string

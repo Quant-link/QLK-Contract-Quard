@@ -1,5 +1,5 @@
 import axios, { AxiosResponse } from 'axios'
-import { AnalysisResponse, HealthResponse, ApiError } from '@/types'
+import { AnalysisResponse, HealthResponse, ApiError } from '../../types'
 
 // Create axios instance with base configuration
 const api = axios.create({

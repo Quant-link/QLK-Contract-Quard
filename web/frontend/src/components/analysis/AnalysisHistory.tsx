@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom'
 import { Clock, FileText, Trash2 } from 'lucide-react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { useAnalysisStore } from '@/store/analysisStore'
-import { formatDate, formatFileSize } from '@/lib/utils'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
+import { Button } from '../ui/button'
+import { Badge } from '../ui/badge'
+import { useAnalysisStore } from '../../../store/analysisStore'
+import { formatDate, formatFileSize } from '../../lib/utils'
 
 export default function AnalysisHistory() {
   const { analysisHistory, removeFromHistory, clearHistory } = useAnalysisStore()

@@ -1,13 +1,13 @@
 import { Link, useLocation } from 'react-router-dom'
 import { Shield, Moon, Sun, Monitor } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { useTheme } from '@/components/theme-provider'
+import { Button } from '../ui/button'
+import { useTheme } from '../theme-provider'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+} from '../ui/dropdown-menu'
 
 export default function Header() {
   const location = useLocation()

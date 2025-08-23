@@ -1,11 +1,11 @@
 import { useCallback, useState } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { Upload, File, X, AlertCircle } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { formatFileSize, getFileTypeInfo } from '@/lib/utils'
-import { UploadedFile } from '@/types'
+import { Button } from '../ui/button'
+import { Card, CardContent } from '../ui/card'
+import { Badge } from '../ui/badge'
+import { formatFileSize, getFileTypeInfo } from '../../lib/utils'
+import { UploadedFile } from '../../types'
 
 interface FileUploadProps {
   onFilesSelected: (files: UploadedFile[]) => void

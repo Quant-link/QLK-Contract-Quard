@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { CheckCircle, Clock, AlertTriangle, Loader2 } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
-import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
+import { Progress } from '../ui/progress'
+import { Badge } from '../ui/badge'
 
 interface AnalysisStep {
   id: string

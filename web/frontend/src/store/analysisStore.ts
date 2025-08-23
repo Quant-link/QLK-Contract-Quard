@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { AnalysisResponse, UploadedFile } from '@/types'
+import { AnalysisResponse, UploadedFile } from '../../types'
 
 interface AnalysisState {
   // Current analysis session

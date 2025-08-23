@@ -1,9 +1,9 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts'
 import { AlertTriangle, Shield, Clock, FileText } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { AnalysisMetadata } from '@/types'
-import { formatDate, formatFileSize } from '@/lib/utils'
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
+import { Badge } from '../ui/badge'
+import { AnalysisMetadata } from '../../../types'
+import { formatDate, formatFileSize } from '../../lib/utils'
 
 interface AnalysisSummaryProps {
   metadata: AnalysisMetadata
