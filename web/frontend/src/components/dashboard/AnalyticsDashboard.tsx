@@ -3,7 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { Badge } from '../ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
-import { TrendingUp, Shield, FileText, Clock, AlertTriangle, CheckCircle } from 'lucide-react'
+import { TrendingUp, FileText, Clock, AlertTriangle } from 'lucide-react'
 import RecentAnalyses from './RecentAnalyses'
 
 interface AnalyticsData {
@@ -254,7 +254,7 @@ export default function AnalyticsDashboard() {
                     <YAxis domain={[0, 100]} />
                     <Tooltip 
                       labelFormatter={(value) => `Analysis #${value}`}
-                      formatter={(value: any, name: any) => [value, 'Risk Score']}
+                      formatter={(value: any) => [value, 'Risk Score']}
                     />
                     <Line 
                       type="monotone" 

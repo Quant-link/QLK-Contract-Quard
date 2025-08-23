@@ -164,10 +164,10 @@ export default function EnhancedAnalysisResults() {
                 {languageInfo.icon} {languageInfo.name}
               </Badge>
               <span className="text-sm text-gray-500">
-                Analyzed {formatDate(analysis.metadata.created_at)}
+                Analyzed {formatDate(analysis.timestamp || new Date().toISOString())}
               </span>
               <span className="text-sm text-gray-500">
-                Duration: {formatDuration(analysis.metadata.analysis_duration_ms)}
+                Duration: {formatDuration(analysis.metadata.analysis_duration_ms || 0)}
               </span>
             </div>
           </div>
@@ -307,7 +307,7 @@ export default function EnhancedAnalysisResults() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Analysis Time</span>
-                  <span className="font-medium">{formatDuration(analysis.metadata.analysis_duration_ms)}</span>
+                  <span className="font-medium">{formatDuration(analysis.metadata.analysis_duration_ms || 0)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Status</span>
@@ -367,10 +367,10 @@ export default function EnhancedAnalysisResults() {
           <div className="space-y-4">
             {analysis.findings.length > 0 ? (
               analysis.findings.map((finding, index) => (
-                <FindingCard 
-                  key={index} 
-                  finding={finding} 
-                  fileContent={fileContent}
+                <FindingCard
+                  key={index}
+                  finding={finding}
+                  index={index}
                 />
               ))
             ) : (
@@ -390,19 +390,23 @@ export default function EnhancedAnalysisResults() {
         </TabsContent>
 
         <TabsContent value="code" className="mt-6">
-          <CodeViewer 
-            content={fileContent}
-            language={analysis.metadata.language}
+          <CodeViewer
+            code={fileContent}
+            language={analysis.metadata.language || 'text'}
             findings={analysis.findings}
           />
         </TabsContent>
 
         <TabsContent value="timeline" className="mt-6">
-          <AnalysisTimeline analysis={analysis} />
+          <div className="text-center py-8 text-gray-500">
+            Analysis timeline feature coming soon...
+          </div>
         </TabsContent>
 
         <TabsContent value="recommendations" className="mt-6">
-          <SecurityRecommendations findings={analysis.findings} />
+          <div className="text-center py-8 text-gray-500">
+            Security recommendations feature coming soon...
+          </div>
         </TabsContent>
       </Tabs>
     </div>

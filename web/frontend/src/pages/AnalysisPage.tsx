@@ -25,7 +25,7 @@ export default function AnalysisPage() {
   const [analysisId, setAnalysisId] = useState<string | null>(null)
 
   // WebSocket for real-time updates
-  const { status, progress, messages } = useAnalysisWebSocket(analysisId || undefined)
+  const { status } = useAnalysisWebSocket(analysisId || undefined)
 
   // Handle analysis completion
   useEffect(() => {

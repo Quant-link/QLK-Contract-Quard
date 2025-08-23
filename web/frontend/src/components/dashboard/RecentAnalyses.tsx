@@ -10,22 +10,7 @@ import { Progress } from '../ui/progress'
 import { apiService } from '../../services/api'
 import { useToast } from '../../hooks/use-toast'
 import { formatDistanceToNow } from 'date-fns'
-
-interface Analysis {
-  analysis_id: string
-  filename: string
-  language: string
-  status: string
-  risk_score: number
-  total_findings: number
-  critical_count: number
-  high_count: number
-  medium_count: number
-  low_count: number
-  info_count: number
-  analysis_duration_ms: number
-  created_at: string
-}
+import { AnalysisResponse } from '../../types'
 
 interface RecentAnalysesProps {
   limit?: number
@@ -34,7 +19,7 @@ interface RecentAnalysesProps {
 }
 
 export default function RecentAnalyses({ limit = 10, showHeader = true, compact = false }: RecentAnalysesProps) {
-  const [analyses, setAnalyses] = useState<Analysis[]>([])
+  const [analyses, setAnalyses] = useState<AnalysisResponse[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { toast } = useToast()
@@ -226,20 +211,20 @@ export default function RecentAnalyses({ limit = 10, showHeader = true, compact 
             {analyses.slice(0, 5).map((analysis) => (
               <div key={analysis.analysis_id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
                 <div className="flex items-center space-x-3">
-                  <div className="text-lg">{getLanguageIcon(analysis.language)}</div>
+                  <div className="text-lg">{getLanguageIcon(analysis.language || 'unknown')}</div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{analysis.filename}</p>
+                    <p className="font-medium truncate">{analysis.filename || 'Unknown file'}</p>
                     <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                      <span>{analysis.language.toUpperCase()}</span>
+                      <span>{(analysis.language || 'unknown').toUpperCase()}</span>
                       <span>•</span>
-                      <span>{analysis.total_findings} findings</span>
+                      <span>{analysis.total_findings || 0} findings</span>
                       <span>•</span>
                       <span>{formatDistanceToNow(new Date(analysis.created_at), { addSuffix: true })}</span>
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  {getRiskBadge(analysis.risk_score)}
+                  {getRiskBadge(analysis.risk_score || 0)}
                   <Button variant="ghost" size="sm" asChild>
                     <Link to={`/analysis/${analysis.analysis_id}`}>
                       <Eye className="h-4 w-4" />
@@ -308,13 +293,13 @@ export default function RecentAnalyses({ limit = 10, showHeader = true, compact 
                 <TableRow key={analysis.analysis_id} className="hover:bg-muted/50">
                   <TableCell>
                     <div className="flex items-center space-x-3">
-                      <div className="text-lg">{getLanguageIcon(analysis.language)}</div>
+                      <div className="text-lg">{getLanguageIcon(analysis.language || 'unknown')}</div>
                       <div>
-                        <Link 
+                        <Link
                           to={`/analysis/${analysis.analysis_id}`}
                           className="font-medium hover:underline"
                         >
-                          {analysis.filename}
+                          {analysis.filename || 'Unknown file'}
                         </Link>
                         <div className="text-sm text-muted-foreground">
                           ID: {analysis.analysis_id.substring(0, 8)}...
@@ -323,8 +308,8 @@ export default function RecentAnalyses({ limit = 10, showHeader = true, compact 
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={getLanguageColor(analysis.language)}>
-                      {analysis.language.toUpperCase()}
+                    <Badge variant="outline" className={getLanguageColor(analysis.language || 'unknown')}>
+                      {(analysis.language || 'unknown').toUpperCase()}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -336,32 +321,32 @@ export default function RecentAnalyses({ limit = 10, showHeader = true, compact 
                   <TableCell>
                     <div className="flex items-center space-x-2">
                       <div className="w-16">
-                        <Progress value={analysis.risk_score} className="h-2" />
+                        <Progress value={analysis.risk_score || 0} className="h-2" />
                       </div>
-                      <span className="text-sm font-medium">{analysis.risk_score}/100</span>
-                      {getRiskBadge(analysis.risk_score)}
+                      <span className="text-sm font-medium">{analysis.risk_score || 0}/100</span>
+                      {getRiskBadge(analysis.risk_score || 0)}
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="space-y-1">
-                      <div className="text-sm font-medium">{analysis.total_findings} total</div>
+                      <div className="text-sm font-medium">{analysis.total_findings || 0} total</div>
                       <div className="flex space-x-1">
-                        {analysis.critical_count > 0 && (
+                        {(analysis.critical_count || 0) > 0 && (
                           <Badge variant="destructive" className="text-xs px-1">
                             {analysis.critical_count}C
                           </Badge>
                         )}
-                        {analysis.high_count > 0 && (
+                        {(analysis.high_count || 0) > 0 && (
                           <Badge variant="secondary" className="text-xs px-1 bg-orange-100 text-orange-800">
                             {analysis.high_count}H
                           </Badge>
                         )}
-                        {analysis.medium_count > 0 && (
+                        {(analysis.medium_count || 0) > 0 && (
                           <Badge variant="secondary" className="text-xs px-1 bg-yellow-100 text-yellow-800">
                             {analysis.medium_count}M
                           </Badge>
                         )}
-                        {analysis.low_count > 0 && (
+                        {(analysis.low_count || 0) > 0 && (
                           <Badge variant="outline" className="text-xs px-1">
                             {analysis.low_count}L
                           </Badge>
@@ -371,7 +356,7 @@ export default function RecentAnalyses({ limit = 10, showHeader = true, compact 
                   </TableCell>
                   <TableCell>
                     <span className="text-sm text-muted-foreground">
-                      {analysis.analysis_duration_ms}ms
+                      {analysis.analysis_duration_ms || 0}ms
                     </span>
                   </TableCell>
                   <TableCell>

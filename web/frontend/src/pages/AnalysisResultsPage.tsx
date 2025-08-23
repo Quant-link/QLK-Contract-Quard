@@ -6,11 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Separator } from '../components/ui/separator'
-import { Progress } from '../components/ui/progress'
 import AnalysisSummary from '../components/analysis/AnalysisSummary'
 import FindingCard from '../components/analysis/FindingCard'
 import CodeViewer from '../components/analysis/CodeViewer'
-import { AnalysisResponse, Finding } from '../types'
+import { AnalysisResponse } from '../types'
 import { apiService } from '../services/api'
 import { useToast } from '../hooks/use-toast'
 import { formatDistanceToNow } from 'date-fns'
@@ -20,7 +19,6 @@ export default function AnalysisResultsPage() {
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [selectedFinding, setSelectedFinding] = useState<Finding | null>(null)
   const [fileContent, setFileContent] = useState<string>('')
   const { toast } = useToast()
 
@@ -194,10 +192,10 @@ export default function AnalysisResultsPage() {
             
             <div className="text-right space-y-2">
               <Badge variant={getRiskBadgeVariant(analysis.metadata.risk_score || 0)} className="text-lg px-3 py-1">
-                {analysis.metadata.risk_score >= 80 ? 'CRITICAL RISK' :
-                 analysis.metadata.risk_score >= 60 ? 'HIGH RISK' :
-                 analysis.metadata.risk_score >= 40 ? 'MEDIUM RISK' :
-                 analysis.metadata.risk_score >= 20 ? 'LOW RISK' : 'MINIMAL RISK'}
+                {(analysis.metadata.risk_score || 0) >= 80 ? 'CRITICAL RISK' :
+                 (analysis.metadata.risk_score || 0) >= 60 ? 'HIGH RISK' :
+                 (analysis.metadata.risk_score || 0) >= 40 ? 'MEDIUM RISK' :
+                 (analysis.metadata.risk_score || 0) >= 20 ? 'LOW RISK' : 'MINIMAL RISK'}
               </Badge>
               <div className="text-sm text-muted-foreground">
                 Analysis Duration: {analysis.metadata.analysis_duration_ms}ms
