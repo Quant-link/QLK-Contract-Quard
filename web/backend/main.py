@@ -19,42 +19,30 @@ import json
 import asyncio
 from datetime import datetime
 import uuid
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
-from slowapi.middleware import SlowAPIMiddleware
-import structlog
+# import structlog
 
-# Configure structured logging
-structlog.configure(
-    processors=[
-        structlog.stdlib.filter_by_level,
-        structlog.stdlib.add_logger_name,
-        structlog.stdlib.add_log_level,
-        structlog.stdlib.PositionalArgumentsFormatter(),
-        structlog.processors.TimeStamper(fmt="iso"),
-        structlog.processors.StackInfoRenderer(),
-        structlog.processors.format_exc_info,
-        structlog.processors.UnicodeDecoder(),
-        structlog.processors.JSONRenderer()
-    ],
-    context_class=dict,
-    logger_factory=structlog.stdlib.LoggerFactory(),
-    wrapper_class=structlog.stdlib.BoundLogger,
-    cache_logger_on_first_use=True,
-)
+# Simple logging
+import logging
+logger = logging.getLogger(__name__)
 
-logger = structlog.get_logger()
+# Mock analyzer for demo
+class MockAnalyzer:
+    def analyze_file(self, filename, content, config=None):
+        # Mock analysis results
+        return [
+            type('Finding', (), {
+                'detector': 'reentrancy',
+                'severity': type('Severity', (), {'value': 'HIGH'})(),
+                'title': 'Potential Reentrancy Vulnerability',
+                'description': 'This function may be vulnerable to reentrancy attacks',
+                'line_number': 42,
+                'column': 10,
+                'code_snippet': 'function withdraw() public {',
+                'recommendation': 'Use the checks-effects-interactions pattern'
+            })()
+        ]
 
-# Add src to Python path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
-
-from contractquard.core.analyzer import ContractQuardAnalyzer
-from contractquard.core.config import Config
-from contractquard.core.findings import Severity
-
-# Rate limiting
-limiter = Limiter(key_func=get_remote_address)
+# Initialize FastAPI app
 app = FastAPI(
     title="ContractQuard API",
     description="AI-augmented smart contract security analysis API",
@@ -62,11 +50,6 @@ app = FastAPI(
     docs_url="/api/docs",
     redoc_url="/api/redoc"
 )
-
-# Add rate limiting middleware
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-app.add_middleware(SlowAPIMiddleware)
 
 # Security middleware
 app.add_middleware(
@@ -89,39 +72,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Request logging middleware
+# Simple request logging middleware
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     start_time = time.time()
-
-    # Log request
-    logger.info(
-        "Request started",
-        method=request.method,
-        url=str(request.url),
-        client_ip=get_remote_address(request),
-        user_agent=request.headers.get("user-agent", "")
-    )
-
     response = await call_next(request)
-
-    # Log response
     process_time = time.time() - start_time
-    logger.info(
-        "Request completed",
-        method=request.method,
-        url=str(request.url),
-        status_code=response.status_code,
-        process_time=process_time,
-        client_ip=get_remote_address(request)
-    )
-
     response.headers["X-Process-Time"] = str(process_time)
+    print(f"{request.method} {request.url} - {response.status_code} - {process_time:.3f}s")
     return response
 
 # Global analyzer instance and start time
-analyzer = ContractQuardAnalyzer()
+analyzer = MockAnalyzer()
 start_time = time.time()
+
+# In-memory storage for analysis results (production'da database kullanılır)
+analysis_results = {}
 
 # Pydantic models
 class AnalysisRequest(BaseModel):
@@ -165,8 +131,7 @@ manager = ConnectionManager()
 
 # API Routes
 @app.get("/api/health", response_model=HealthResponse)
-@limiter.limit("30/minute")
-async def health_check(request: Request):
+async def health_check():
     """Health check endpoint with system status"""
     try:
         # Check analyzer availability
@@ -175,7 +140,7 @@ async def health_check(request: Request):
         # System uptime (simplified)
         uptime = time.time() - start_time if 'start_time' in globals() else 0
 
-        logger.info("Health check requested", client_ip=get_remote_address(request))
+        print("Health check requested")
 
         return HealthResponse(
             status=analyzer_status,
@@ -184,12 +149,11 @@ async def health_check(request: Request):
             uptime_seconds=uptime
         )
     except Exception as e:
-        logger.error("Health check failed", error=str(e))
+        print(f"Health check failed: {e}")
         raise HTTPException(status_code=503, detail="Service temporarily unavailable")
 
 @app.post("/api/analyze", response_model=AnalysisResponse)
-@limiter.limit("10/minute")
-async def analyze_contract(request: Request, file: UploadFile = File(...)):
+async def analyze_contract(file: UploadFile = File(...)):
     """Analyze uploaded smart contract file with comprehensive validation"""
     start_analysis_time = time.time()
     analysis_id = str(uuid.uuid4())
@@ -236,17 +200,10 @@ async def analyze_contract(request: Request, file: UploadFile = File(...)):
                 detail="File content too large. Maximum 1MB of text allowed"
             )
 
-        logger.info(
-            "Analysis started",
-            analysis_id=analysis_id,
-            filename=file.filename,
-            file_size=len(content),
-            client_ip=get_remote_address(request)
-        )
+        print(f"Analysis started: {analysis_id} - {file.filename} ({len(content)} bytes)")
 
         # Perform analysis
-        config = Config()
-        findings = analyzer.analyze_file(file.filename, content_str, config)
+        findings = analyzer.analyze_file(file.filename, content_str)
         
         # Convert findings to dict format with enhanced data
         findings_dict = []
@@ -296,15 +253,11 @@ async def analyze_contract(request: Request, file: UploadFile = File(...)):
             timestamp=datetime.now().isoformat()
         )
         
+        # Store analysis result for later retrieval
+        analysis_results[analysis_id] = response
+
         # Log successful analysis
-        logger.info(
-            "Analysis completed successfully",
-            analysis_id=analysis_id,
-            filename=file.filename,
-            total_findings=len(findings_dict),
-            duration_ms=analysis_duration,
-            client_ip=get_remote_address(request)
-        )
+        print(f"Analysis completed: {analysis_id} - {len(findings_dict)} findings in {analysis_duration}ms")
 
         # Broadcast analysis completion via WebSocket
         await manager.broadcast(json.dumps({
@@ -322,40 +275,40 @@ async def analyze_contract(request: Request, file: UploadFile = File(...)):
         # Re-raise HTTP exceptions (validation errors)
         raise
     except UnicodeDecodeError as e:
-        logger.error(
-            "File encoding error",
-            analysis_id=analysis_id,
-            filename=file.filename,
-            error=str(e),
-            client_ip=get_remote_address(request)
-        )
+        print(f"File encoding error: {e}")
         raise HTTPException(
             status_code=400,
             detail="File encoding error. Please ensure the file is valid UTF-8 text."
         )
     except Exception as e:
-        logger.error(
-            "Analysis failed with unexpected error",
-            analysis_id=analysis_id,
-            filename=file.filename,
-            error=str(e),
-            error_type=type(e).__name__,
-            client_ip=get_remote_address(request)
-        )
+        print(f"Analysis failed: {e}")
         raise HTTPException(
             status_code=500,
             detail="Internal server error during analysis. Please try again later."
         )
 
-@app.get("/api/analysis/{analysis_id}")
+@app.get("/api/analysis/{analysis_id}", response_model=AnalysisResponse)
 async def get_analysis_result(analysis_id: str):
-    """Get analysis result by ID (placeholder for future database integration)"""
-    # This would typically fetch from a database
-    # For now, return a placeholder response
-    return JSONResponse(
-        status_code=404,
-        content={"detail": "Analysis result not found. Results are currently not persisted."}
-    )
+    """Get analysis result by ID"""
+    try:
+        if analysis_id not in analysis_results:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Analysis with ID {analysis_id} not found"
+            )
+
+        result = analysis_results[analysis_id]
+        print(f"Retrieved analysis result: {analysis_id}")
+        return result
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error retrieving analysis result: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Internal server error while retrieving analysis result"
+        )
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):

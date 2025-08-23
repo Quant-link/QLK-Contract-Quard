@@ -1,61 +1,9 @@
-# FastAPI and ASGI server
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-python-multipart==0.0.6
+# Core FastAPI dependencies
+fastapi
+uvicorn[standard]
+python-multipart
+pydantic
+websockets
 
-# Pydantic for data validation
-pydantic==2.5.0
-pydantic-settings==2.1.0
-
-# WebSocket support
-websockets==12.0
-
-# HTTP client for external APIs
-httpx==0.25.2
-aiohttp==3.9.1
-
-# Database (if needed for persistence)
-sqlalchemy==2.0.23
-alembic==1.13.1
-asyncpg==0.29.0
-
-# Redis for caching and session management
-redis==5.0.1
-aioredis==2.0.1
-
-# Security and authentication
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
-python-multipart==0.0.6
-
-# Logging and monitoring
-structlog==23.2.0
-prometheus-client==0.19.0
-
-# File handling and validation
-python-magic==0.4.27
-filetype==1.2.0
-
-# Rate limiting
-slowapi==0.1.9
-
-# CORS and middleware
-python-cors==1.7.0
-
-# Environment configuration
-python-dotenv==1.0.0
-
-# Testing
-pytest==7.4.3
-pytest-asyncio==0.21.1
-pytest-cov==4.1.0
-httpx==0.25.2
-
-# Code quality
-black==23.11.0
-isort==5.12.0
-flake8==6.1.0
-mypy==1.7.1
-
-# Development
-watchdog==3.0.0
+# Basic utilities
+python-dotenv
