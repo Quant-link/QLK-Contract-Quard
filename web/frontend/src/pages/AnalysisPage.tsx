@@ -10,7 +10,7 @@ import { UploadedFile } from '../types'
 import { useToast } from '../hooks/use-toast'
 import { useAnalysis } from '../hooks/useAnalysis'
 import { useAnalysisStore } from '../store/analysisStore'
-import { useWebSocket } from '../hooks/useWebSocket'
+import { useAnalysisWebSocket } from '../hooks/useWebSocket'
 
 export default function AnalysisPage() {
   const navigate = useNavigate()
@@ -25,21 +25,14 @@ export default function AnalysisPage() {
   const [analysisId, setAnalysisId] = useState<string | null>(null)
 
   // WebSocket for real-time updates
-  const { subscribe } = useWebSocket({
-    onConnect: () => console.log('Connected to WebSocket'),
-    onError: (error) => console.error('WebSocket error:', error)
-  })
+  const { status, progress, messages } = useAnalysisWebSocket(analysisId || undefined)
 
-  // Subscribe to WebSocket events
+  // Handle analysis completion
   useEffect(() => {
-    const unsubscribe = subscribe('analysis_complete', (data) => {
-      if (data.analysis_id === analysisId) {
-        handleAnalysisComplete()
-      }
-    })
-
-    return unsubscribe
-  }, [analysisId, subscribe])
+    if (status === 'completed' && analysisId) {
+      handleAnalysisComplete()
+    }
+  }, [status, analysisId])
 
   const handleFilesSelected = (files: UploadedFile[]) => {
     setUploadedFiles(files)

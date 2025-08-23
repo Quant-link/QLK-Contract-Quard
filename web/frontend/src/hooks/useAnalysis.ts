@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { apiService, handleApiError } from '../services/api'
+import { apiService } from '../services/api'
 import { AnalysisResponse } from '../types'
 import { useToast } from '../hooks/use-toast'
 
@@ -23,7 +23,7 @@ export function useAnalysis() {
     },
     onError: (error) => {
       setIsAnalyzing(false)
-      const errorMessage = handleApiError(error)
+      const errorMessage = error instanceof Error ? error.message : 'Analysis failed'
       toast({
         title: "Analysis failed",
         description: errorMessage,
@@ -74,7 +74,7 @@ export function useAnalysis() {
 export function useAnalysisResult(analysisId: string | undefined) {
   return useQuery({
     queryKey: ['analysis', analysisId],
-    queryFn: () => apiService.getAnalysisResult(analysisId!),
+    queryFn: () => apiService.getAnalysis(analysisId!),
     enabled: !!analysisId,
     retry: 1,
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -85,7 +85,7 @@ export function useAnalysisResult(analysisId: string | undefined) {
 export function useHealthCheck() {
   return useQuery({
     queryKey: ['health'],
-    queryFn: apiService.healthCheck,
+    queryFn: apiService.getHealth,
     refetchInterval: 30000, // Check every 30 seconds
     retry: 3,
   })

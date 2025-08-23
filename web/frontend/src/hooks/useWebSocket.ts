@@ -125,7 +125,8 @@ export function useWebSocket({
 
   useEffect(() => {
     shouldReconnectRef.current = true
-    connect()
+    // Temporarily disable WebSocket connections until backend supports it
+    // connect()
 
     return () => {
       shouldReconnectRef.current = false
@@ -146,6 +147,55 @@ export function useWebSocket({
     sendMessage,
     reconnect,
     disconnect
+  }
+}
+
+// Hook for analysis-specific WebSocket connection
+export function useAnalysisWebSocket(analysisId?: string) {
+  const [status, setStatus] = useState<string>('pending')
+  const [progress, setProgress] = useState(0)
+  const [currentStep, setCurrentStep] = useState('')
+  const [messages, setMessages] = useState<WebSocketMessage[]>([])
+
+  const handleMessage = useCallback((message: WebSocketMessage) => {
+    setMessages(prev => [...prev, message])
+
+    if (message.analysis_id === analysisId) {
+      switch (message.type) {
+        case 'analysis_status':
+          setStatus(message.status || 'pending')
+          break
+        case 'analysis_progress':
+          setProgress(message.data?.progress || 0)
+          setCurrentStep(message.data?.step || '')
+          break
+        case 'analysis_complete':
+          setStatus('completed')
+          setProgress(100)
+          break
+        case 'analysis_error':
+          setStatus('failed')
+          break
+      }
+    }
+  }, [analysisId])
+
+  const wsUrl = `ws://localhost:8000/ws${analysisId ? `/${analysisId}` : ''}`
+
+  const webSocket = useWebSocket({
+    url: wsUrl,
+    onMessage: handleMessage,
+    onOpen: () => console.log('Analysis WebSocket connected'),
+    onClose: () => console.log('Analysis WebSocket disconnected'),
+    onError: (error) => console.error('Analysis WebSocket error:', error)
+  })
+
+  return {
+    ...webSocket,
+    status,
+    progress,
+    currentStep,
+    messages
   }
 }
 
