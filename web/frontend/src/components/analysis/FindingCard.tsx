@@ -118,12 +118,56 @@ export default function FindingCard({ finding, index }: FindingCardProps) {
               </div>
             )}
 
+            {/* Metadata */}
+            <div className="flex flex-wrap gap-2">
+              {finding.confidence && (
+                <div className="px-2 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700">
+                  Confidence: {finding.confidence}
+                </div>
+              )}
+              {finding.impact && (
+                <div className="px-2 py-1 rounded-md text-xs font-medium bg-purple-50 text-purple-700">
+                  Impact: {finding.impact}
+                </div>
+              )}
+              {finding.cwe_id && (
+                <div className="px-2 py-1 rounded-md text-xs font-medium bg-indigo-50 text-indigo-700">
+                  CWE-{finding.cwe_id}
+                </div>
+              )}
+              {finding.category && (
+                <div className="px-2 py-1 rounded-md text-xs font-medium bg-gray-50 text-gray-700">
+                  {finding.category}
+                </div>
+              )}
+            </div>
+
             {/* Recommendation */}
             {finding.recommendation && (
               <div>
                 <h4 className="font-medium mb-2">Recommendation</h4>
                 <div className="bg-green-50 border border-green-200 rounded-md p-3">
                   <p className="text-sm text-green-800">{finding.recommendation}</p>
+                </div>
+              </div>
+            )}
+
+            {/* References */}
+            {finding.references && finding.references.length > 0 && (
+              <div>
+                <h4 className="font-medium mb-2">References</h4>
+                <div className="space-y-1">
+                  {finding.references.map((ref, index) => (
+                    <a
+                      key={index}
+                      href={ref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-blue-600 hover:text-blue-800 underline block"
+                    >
+                      {ref}
+                    </a>
+                  ))}
                 </div>
               </div>
             )}

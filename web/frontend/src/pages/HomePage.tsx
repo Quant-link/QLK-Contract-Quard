@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom'
-import { Shield, Zap, Eye, ArrowRight, CheckCircle } from 'lucide-react'
+import { Shield, Zap, Eye, ArrowRight, CheckCircle, BarChart3 } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
+import AnalyticsDashboard from '../components/dashboard/AnalyticsDashboard'
 
 export default function HomePage() {
   const features = [
@@ -42,7 +44,7 @@ export default function HomePage() {
             helping developers identify vulnerabilities before deployment.
           </p>
         </div>
-        
+
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button asChild size="lg" variant="quantlink">
             <Link to="/analyze">
@@ -55,8 +57,43 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section id="features" className="space-y-8">
+      {/* Main Content Tabs */}
+      <Tabs defaultValue="overview" className="space-y-8">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="features">Features</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-8">
+          {/* Supported Languages */}
+          <section className="space-y-8">
+            <div className="text-center space-y-4">
+              <h2 className="text-3xl font-bold">Supported Languages</h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                Comprehensive security analysis for multiple blockchain languages
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {supportedLanguages.map((lang, index) => (
+                <Card key={index} className="text-center">
+                  <CardHeader>
+                    <div className="text-4xl mb-2">{lang.icon}</div>
+                    <CardTitle>{lang.name}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <CardDescription>{lang.description}</CardDescription>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+        </TabsContent>
+
+        <TabsContent value="features" className="space-y-8">
+          {/* Features Section */}
+          <section id="features" className="space-y-8">
         <div className="text-center space-y-4">
           <h2 className="text-3xl font-bold">Why Choose ContractQuard?</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
@@ -147,6 +184,12 @@ export default function HomePage() {
           </Link>
         </Button>
       </section>
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-8">
+          <AnalyticsDashboard />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

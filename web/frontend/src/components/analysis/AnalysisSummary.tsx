@@ -28,11 +28,12 @@ export default function AnalysisSummary({ metadata, timestamp }: AnalysisSummary
   ]
 
   const getRiskLevel = () => {
-    if (metadata.critical_count > 0) return { level: 'Critical', color: 'text-red-600', bgColor: 'bg-red-50' }
-    if (metadata.high_count > 0) return { level: 'High', color: 'text-orange-600', bgColor: 'bg-orange-50' }
-    if (metadata.medium_count > 0) return { level: 'Medium', color: 'text-yellow-600', bgColor: 'bg-yellow-50' }
-    if (metadata.low_count > 0) return { level: 'Low', color: 'text-blue-600', bgColor: 'bg-blue-50' }
-    return { level: 'Clean', color: 'text-green-600', bgColor: 'bg-green-50' }
+    const riskScore = metadata.risk_score || 0
+    if (riskScore >= 80) return { level: 'Critical', color: 'text-red-600', bgColor: 'bg-red-50', score: riskScore }
+    if (riskScore >= 60) return { level: 'High', color: 'text-orange-600', bgColor: 'bg-orange-50', score: riskScore }
+    if (riskScore >= 40) return { level: 'Medium', color: 'text-yellow-600', bgColor: 'bg-yellow-50', score: riskScore }
+    if (riskScore >= 20) return { level: 'Low', color: 'text-blue-600', bgColor: 'bg-blue-50', score: riskScore }
+    return { level: 'Clean', color: 'text-green-600', bgColor: 'bg-green-50', score: riskScore }
   }
 
   const riskLevel = getRiskLevel()
@@ -48,6 +49,9 @@ export default function AnalysisSummary({ metadata, timestamp }: AnalysisSummary
         <CardContent>
           <div className={`text-2xl font-bold ${riskLevel.color}`}>
             {riskLevel.level}
+          </div>
+          <div className="text-lg font-semibold text-muted-foreground">
+            {riskLevel.score}/100
           </div>
           <p className="text-xs text-muted-foreground">
             Based on {metadata.total_findings} findings

@@ -9,6 +9,11 @@ export interface Finding {
   column?: number
   code_snippet?: string
   recommendation?: string
+  confidence?: string
+  impact?: string
+  cwe_id?: number
+  references?: string[]
+  category?: string
 }
 
 export interface AnalysisMetadata {
@@ -21,6 +26,9 @@ export interface AnalysisMetadata {
   low_count: number
   info_count: number
   analysis_duration_ms?: number
+  language?: string
+  lines_of_code?: number
+  risk_score?: number
 }
 
 export interface AnalysisResponse {
