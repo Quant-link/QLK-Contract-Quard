@@ -1,0 +1,33 @@
+# Core dependencies for ContractQuard Static Analyzer MVP
+py-solc-x>=1.12.0
+solc-select>=1.0.4
+click>=8.0.0
+colorama>=0.4.4
+pyyaml>=6.0
+jinja2>=3.0.0
+pathlib>=1.0.1
+
+# Web Interface dependencies
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-multipart>=0.0.6
+websockets>=12.0
+python-socketio>=5.10.0
+aiofiles>=23.2.1
+pydantic>=2.5.0
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+
+# Development dependencies
+pytest>=7.0.0
+pytest-cov>=4.0.0
+black>=22.0.0
+flake8>=5.0.0
+mypy>=1.0.0
+pytest-asyncio>=0.21.0
+httpx>=0.25.0
+
+# Optional: For future ML integration
+# numpy>=1.21.0
+# scikit-learn>=1.1.0
+# tensorflow>=2.9.0

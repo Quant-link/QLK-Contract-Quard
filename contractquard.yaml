@@ -1,0 +1,59 @@
+# ContractQuard Static Analyzer Configuration
+# ============================================
+
+# Analysis settings
+max_file_size_mb: 10
+timeout_seconds: 300
+include_test_files: false
+
+# Severity filtering
+min_severity: "INFO"
+exclude_severities: []
+
+# File filtering
+include_patterns:
+  - "*.sol"
+exclude_patterns:
+  - "*test*"
+  - "*mock*"
+  - "*Test*"
+  - "*Mock*"
+
+# Detector configurations
+detectors:
+  regex_detector:
+    enabled: true
+    severity_override: null
+    custom_params: {}
+  
+  ast_reentrancy_detector:
+    enabled: true
+    severity_override: null
+    custom_params: {}
+  
+  ast_access_control_detector:
+    enabled: true
+    severity_override: null
+    custom_params: {}
+  
+  ast_unchecked_calls_detector:
+    enabled: true
+    severity_override: null
+    custom_params: {}
+
+# Output configuration
+output:
+  format: "console"  # console, json, html, markdown
+  output_file: null
+  include_code_snippets: true
+  max_snippet_lines: 5
+  color_output: true
+  verbose: false
+
+# Solidity compiler configuration
+solc:
+  version: null  # Auto-detect if null
+  optimize: false
+  optimize_runs: 200
+  evm_version: null
+  allow_paths: []
