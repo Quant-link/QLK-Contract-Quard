@@ -31,7 +31,7 @@ export default function CodeViewer({
   const [selectedLine, setSelectedLine] = useState<number | null>(null)
   const { theme } = useTheme()
   const { toast } = useToast()
-  const codeRef = useRef<HTMLDivElement>(null)
+  // const codeRef = useRef<HTMLDivElement>(null)
 
   const getLanguageFromFilename = (filename: string) => {
     const ext = filename.split('.').pop()?.toLowerCase()

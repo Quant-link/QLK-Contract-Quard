@@ -42,11 +42,12 @@ export interface AnalysisResponse {
 
 export interface WebSocketMessage {
   type: string
-  message: string
-  timestamp: string
   analysis_id?: string
   status?: string
   data?: any
+  timestamp: string
+  message?: string
+  error?: string
 }
 
 export interface HealthResponse {
@@ -54,16 +55,6 @@ export interface HealthResponse {
   version: string
   timestamp: string
   uptime_seconds?: number
-}
-
-export interface WebSocketMessage {
-  type: string
-  analysis_id?: string
-  status?: string
-  data?: any
-  timestamp: string
-  message?: string
-  error?: string
 }
 
 // UI Types

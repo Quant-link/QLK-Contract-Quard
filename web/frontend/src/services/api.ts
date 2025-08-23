@@ -74,6 +74,40 @@ export const apiService = {
     const promises = files.map(file => this.analyzeFile(file))
     return Promise.all(promises)
   },
+
+  // Get analysis by ID (alias for getAnalysisResult)
+  async getAnalysis(analysisId: string): Promise<AnalysisResponse> {
+    return this.getAnalysisResult(analysisId)
+  },
+
+  // Get health status (alias for healthCheck)
+  async getHealth(): Promise<HealthResponse> {
+    return this.healthCheck()
+  },
+
+  // Get list of analyses
+  async getAnalyses(params?: { limit?: number; offset?: number }): Promise<{ analyses: AnalysisResponse[]; total: number }> {
+    const queryParams = new URLSearchParams()
+    if (params?.limit) queryParams.append('limit', params.limit.toString())
+    if (params?.offset) queryParams.append('offset', params.offset.toString())
+
+    const response = await api.get(`/api/analyses?${queryParams.toString()}`)
+    return response.data
+  },
+
+  // Delete analysis
+  async deleteAnalysis(analysisId: string): Promise<void> {
+    await api.delete(`/api/analysis/${analysisId}`)
+  },
+
+  // Export analysis
+  async exportAnalysis(analysisId: string, format: 'json' | 'pdf' | 'csv' = 'json'): Promise<Blob> {
+    const response = await api.get(`/api/analysis/${analysisId}/export`, {
+      params: { format },
+      responseType: 'blob'
+    })
+    return response.data
+  },
 }
 
 // WebSocket service for real-time updates

@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { 
-  ArrowLeft, 
-  Download, 
-  Share2, 
-  AlertTriangle, 
-  CheckCircle, 
+import {
+  ArrowLeft,
+  Download,
+  Share2,
+  AlertTriangle,
+  CheckCircle,
   Clock,
   FileText,
   Code,
@@ -18,15 +18,12 @@ import { Button } from '../ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
 import { Badge } from '../ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
-import { Progress } from '../ui/progress'
 import { Separator } from '../ui/separator'
 import { apiService } from '../../services/api'
 import { AnalysisResponse } from '../../types'
 import { formatDate, formatDuration, getRiskLevel, getSeverityColor, getLanguageInfo } from '../../lib/utils'
 import CodeViewer from './CodeViewer'
 import FindingCard from './FindingCard'
-import AnalysisTimeline from './AnalysisTimeline'
-import SecurityRecommendations from './SecurityRecommendations'
 
 export default function EnhancedAnalysisResults() {
   const { analysisId } = useParams<{ analysisId: string }>()
@@ -142,8 +139,8 @@ export default function EnhancedAnalysisResults() {
     )
   }
 
-  const riskLevel = getRiskLevel(analysis.metadata.risk_score)
-  const languageInfo = getLanguageInfo(analysis.metadata.language)
+  const riskLevel = getRiskLevel(analysis.metadata.risk_score || 0)
+  const languageInfo = getLanguageInfo(analysis.metadata.language || 'unknown')
 
   return (
     <div className="container mx-auto px-4 py-8">
