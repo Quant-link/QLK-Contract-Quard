@@ -42,7 +42,7 @@ interface AnalysisState {
 
 export const useAnalysisStore = create<AnalysisState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       // Initial state
       uploadedFiles: [],
       currentAnalysis: null,

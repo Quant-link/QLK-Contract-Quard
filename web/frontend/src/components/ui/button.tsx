@@ -1,19 +1,6 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
-// import { cva, type VariantProps } from "class-variance-authority"
-// Temporary implementation without class-variance-authority
-const cva = (base: string, config: any) => (props: any) => {
-  let classes = base
-  if (config.variants && props) {
-    Object.keys(props).forEach(key => {
-      if (config.variants[key] && config.variants[key][props[key]]) {
-        classes += ' ' + config.variants[key][props[key]]
-      }
-    })
-  }
-  return classes
-}
-type VariantProps<T> = any
+import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(

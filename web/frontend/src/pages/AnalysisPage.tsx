@@ -19,7 +19,6 @@ export default function AnalysisPage() {
   const {
     uploadedFiles,
     setUploadedFiles,
-    resetAnalysisSession,
     addToHistory
   } = useAnalysisStore()
 

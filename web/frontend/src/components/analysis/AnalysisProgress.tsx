@@ -14,15 +14,13 @@ interface AnalysisStep {
 interface AnalysisProgressProps {
   isAnalyzing: boolean
   currentStep?: string
-  progress?: number
   onComplete?: () => void
 }
 
-export default function AnalysisProgress({ 
-  isAnalyzing, 
-  currentStep, 
-  progress = 0,
-  onComplete 
+export default function AnalysisProgress({
+  isAnalyzing,
+  currentStep,
+  onComplete
 }: AnalysisProgressProps) {
   const [steps, setSteps] = useState<AnalysisStep[]>([
     { id: 'upload', name: 'File Upload', status: 'completed' },
@@ -32,7 +30,7 @@ export default function AnalysisProgress({
     { id: 'report', name: 'Generating Report', status: 'pending' }
   ])
 
-  const [currentStepIndex, setCurrentStepIndex] = useState(0)
+  const [, setCurrentStepIndex] = useState(0)
 
   useEffect(() => {
     if (!isAnalyzing) return
@@ -127,7 +125,7 @@ export default function AnalysisProgress({
 
         {/* Step Details */}
         <div className="space-y-4">
-          {steps.map((step, index) => (
+          {steps.map((step) => (
             <div
               key={step.id}
               className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
