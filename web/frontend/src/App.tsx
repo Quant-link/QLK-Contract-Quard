@@ -5,6 +5,7 @@ import Layout from './components/layout/Layout'
 import HomePage from './pages/HomePage'
 import AnalysisPage from './pages/AnalysisPage'
 import ResultsPage from './pages/ResultsPage'
+import AnalysisResultsPage from './pages/AnalysisResultsPage'
 import NotFoundPage from './pages/NotFoundPage'
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/analyze" element={<AnalysisPage />} />
           <Route path="/results/:analysisId" element={<ResultsPage />} />
+          <Route path="/analysis/:analysisId" element={<AnalysisResultsPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Layout>

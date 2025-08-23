@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Shield, Zap, Eye, ArrowRight, CheckCircle, BarChart3 } from 'lucide-react'
+import { Shield, Zap, Eye, ArrowRight, CheckCircle } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'

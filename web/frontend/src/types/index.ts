@@ -40,6 +40,15 @@ export interface AnalysisResponse {
   error_message?: string
 }
 
+export interface WebSocketMessage {
+  type: string
+  message: string
+  timestamp: string
+  analysis_id?: string
+  status?: string
+  data?: any
+}
+
 export interface HealthResponse {
   status: string
   version: string

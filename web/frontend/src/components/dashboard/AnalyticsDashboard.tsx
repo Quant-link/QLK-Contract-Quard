@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { Badge } from '../ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 import { TrendingUp, Shield, FileText, Clock, AlertTriangle, CheckCircle } from 'lucide-react'
+import RecentAnalyses from './RecentAnalyses'
 
 interface AnalyticsData {
   total_analyses: number
@@ -298,39 +299,7 @@ export default function AnalyticsDashboard() {
       </Tabs>
 
       {/* Recent Analyses */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Analyses</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {history.analyses.slice(0, 5).map((analysis) => (
-              <div key={analysis.analysis_id} className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <div className={`w-2 h-2 rounded-full ${
-                    analysis.risk_score >= 80 ? 'bg-red-500' :
-                    analysis.risk_score >= 60 ? 'bg-orange-500' :
-                    analysis.risk_score >= 40 ? 'bg-yellow-500' :
-                    analysis.risk_score >= 20 ? 'bg-blue-500' : 'bg-green-500'
-                  }`} />
-                  <div>
-                    <p className="font-medium">{analysis.filename}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {analysis.language.toUpperCase()} • {analysis.total_findings} findings
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="font-medium">{analysis.risk_score}/100</div>
-                  <div className="text-sm text-muted-foreground">
-                    {new Date(analysis.created_at).toLocaleDateString()}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <RecentAnalyses limit={10} compact={true} />
     </div>
   )
 }

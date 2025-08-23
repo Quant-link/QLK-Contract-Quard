@@ -1,70 +1,188 @@
-import { useEffect, useRef, useState } from 'react'
-import { wsService } from '../services/api'
+import { useEffect, useRef, useState, useCallback } from 'react'
+import { WebSocketMessage } from '../types'
 
 interface UseWebSocketOptions {
-  autoConnect?: boolean
-  onConnect?: () => void
-  onDisconnect?: () => void
+  url: string
+  onMessage?: (message: WebSocketMessage) => void
+  onOpen?: () => void
+  onClose?: () => void
   onError?: (error: Event) => void
+  reconnectAttempts?: number
+  reconnectInterval?: number
 }
 
-export function useWebSocket(options: UseWebSocketOptions = {}) {
-  const { autoConnect = true, onConnect, onDisconnect, onError } = options
+interface UseWebSocketReturn {
+  socket: WebSocket | null
+  isConnected: boolean
+  isConnecting: boolean
+  error: string | null
+  sendMessage: (message: any) => void
+  reconnect: () => void
+  disconnect: () => void
+}
+
+export function useWebSocket({
+  url,
+  onMessage,
+  onOpen,
+  onClose,
+  onError,
+  reconnectAttempts = 5,
+  reconnectInterval = 3000
+}: UseWebSocketOptions): UseWebSocketReturn {
+  const [socket, setSocket] = useState<WebSocket | null>(null)
   const [isConnected, setIsConnected] = useState(false)
-  const [connectionError, setConnectionError] = useState<string | null>(null)
-  const subscriptionsRef = useRef<(() => void)[]>([])
+  const [isConnecting, setIsConnecting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [reconnectCount, setReconnectCount] = useState(0)
+
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout>()
+  const shouldReconnectRef = useRef(true)
+
+  const connect = useCallback(() => {
+    if (socket?.readyState === WebSocket.OPEN) {
+      return
+    }
+
+    setIsConnecting(true)
+    setError(null)
+
+    try {
+      const ws = new WebSocket(url)
+
+      ws.onopen = () => {
+        console.log('WebSocket connected')
+        setIsConnected(true)
+        setIsConnecting(false)
+        setError(null)
+        setReconnectCount(0)
+        onOpen?.()
+      }
+
+      ws.onmessage = (event) => {
+        try {
+          const message: WebSocketMessage = JSON.parse(event.data)
+          onMessage?.(message)
+        } catch (err) {
+          console.error('Failed to parse WebSocket message:', err)
+        }
+      }
+
+      ws.onclose = (event) => {
+        console.log('WebSocket disconnected:', event.code, event.reason)
+        setIsConnected(false)
+        setIsConnecting(false)
+        setSocket(null)
+        onClose?.()
+
+        // Attempt to reconnect if not manually closed
+        if (shouldReconnectRef.current && reconnectCount < reconnectAttempts) {
+          console.log(`Attempting to reconnect... (${reconnectCount + 1}/${reconnectAttempts})`)
+          reconnectTimeoutRef.current = setTimeout(() => {
+            setReconnectCount(prev => prev + 1)
+            connect()
+          }, reconnectInterval)
+        }
+      }
+
+      ws.onerror = (event) => {
+        console.error('WebSocket error:', event)
+        setError('WebSocket connection error')
+        setIsConnecting(false)
+        onError?.(event)
+      }
+
+      setSocket(ws)
+    } catch (err) {
+      console.error('Failed to create WebSocket:', err)
+      setError('Failed to create WebSocket connection')
+      setIsConnecting(false)
+    }
+  }, [url, onMessage, onOpen, onClose, onError, reconnectAttempts, reconnectInterval, reconnectCount, socket])
+
+  const sendMessage = useCallback((message: any) => {
+    if (socket?.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify(message))
+    } else {
+      console.warn('WebSocket is not connected')
+    }
+  }, [socket])
+
+  const reconnect = useCallback(() => {
+    setReconnectCount(0)
+    connect()
+  }, [connect])
+
+  const disconnect = useCallback(() => {
+    shouldReconnectRef.current = false
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current)
+    }
+    if (socket) {
+      socket.close()
+    }
+  }, [socket])
 
   useEffect(() => {
-    if (autoConnect) {
-      connect()
-    }
+    shouldReconnectRef.current = true
+    connect()
 
     return () => {
-      // Cleanup subscriptions
-      subscriptionsRef.current.forEach(unsubscribe => unsubscribe())
-      subscriptionsRef.current = []
-      
-      if (wsService.isConnected()) {
-        wsService.disconnect()
+      shouldReconnectRef.current = false
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current)
+      }
+      if (socket) {
+        socket.close()
       }
     }
-  }, [autoConnect])
-
-  const connect = async () => {
-    try {
-      setConnectionError(null)
-      await wsService.connect()
-      setIsConnected(true)
-      onConnect?.()
-    } catch (error) {
-      setConnectionError('Failed to connect to WebSocket')
-      setIsConnected(false)
-      onError?.(error as Event)
-    }
-  }
-
-  const disconnect = () => {
-    wsService.disconnect()
-    setIsConnected(false)
-    onDisconnect?.()
-  }
-
-  const subscribe = (eventType: string, callback: (data: any) => void) => {
-    const unsubscribe = wsService.subscribe(eventType, callback)
-    subscriptionsRef.current.push(unsubscribe)
-    return unsubscribe
-  }
-
-  const send = (data: any) => {
-    wsService.send(data)
-  }
+  }, []) // Only run on mount
 
   return {
+    socket,
     isConnected,
-    connectionError,
-    connect,
-    disconnect,
-    subscribe,
-    send,
+    isConnecting,
+    error,
+    sendMessage,
+    reconnect,
+    disconnect
+  }
+}
+
+// Hook for real-time notifications
+export function useNotificationWebSocket() {
+  const [notifications, setNotifications] = useState<WebSocketMessage[]>([])
+  const [unreadCount, setUnreadCount] = useState(0)
+
+  const handleMessage = useCallback((message: WebSocketMessage) => {
+    if (message.type === 'notification') {
+      setNotifications(prev => [message, ...prev])
+      setUnreadCount(prev => prev + 1)
+    }
+  }, [])
+
+  const markAsRead = useCallback(() => {
+    setUnreadCount(0)
+  }, [])
+
+  const clearNotifications = useCallback(() => {
+    setNotifications([])
+    setUnreadCount(0)
+  }, [])
+
+  const webSocket = useWebSocket({
+    url: 'ws://localhost:8000/ws/notifications',
+    onMessage: handleMessage,
+    onOpen: () => console.log('Notification WebSocket connected'),
+    onClose: () => console.log('Notification WebSocket disconnected'),
+    onError: (error) => console.error('Notification WebSocket error:', error)
+  })
+
+  return {
+    ...webSocket,
+    notifications,
+    unreadCount,
+    markAsRead,
+    clearNotifications
   }
 }

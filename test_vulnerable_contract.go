@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type VulnerableContract struct {
@@ -77,26 +75,25 @@ func (msg TransferMsg) ValidateBasic() error {
 
 // Keeper without proper authorization
 type VulnerableKeeper struct {
-	storeKey sdk.StoreKey
+	storeKey string
 }
 
-func (k VulnerableKeeper) SetBalance(ctx sdk.Context, addr string, amount uint64) {
+func (k VulnerableKeeper) SetBalance(addr string, amount uint64) {
 	// No authorization check - VULNERABLE!
-	store := ctx.KVStore(k.storeKey)
-	store.Set([]byte(addr), []byte(fmt.Sprintf("%d", amount)))
+	fmt.Printf("Setting balance for %s to %d without authorization\n", addr, amount)
 }
 
-func (k VulnerableKeeper) DeleteAccount(ctx sdk.Context, addr string) {
+func (k VulnerableKeeper) DeleteAccount(addr string) {
 	// No authorization check - VULNERABLE!
-	store := ctx.KVStore(k.storeKey)
-	store.Delete([]byte(addr))
+	fmt.Printf("Deleting account %s without authorization\n", addr)
 }
 
 // Message handler without validation
-func HandleVulnerableMsg(ctx sdk.Context, msg VulnerableMsg) error {
+func HandleVulnerableMsg(msg VulnerableMsg) error {
 	// No input validation
 	// No authorization check
 	// Direct state modification
+	fmt.Printf("Handling message from %s without validation\n", msg.Sender)
 	return nil
 }
 
@@ -105,9 +102,9 @@ type VulnerableMsg struct {
 	Data   []byte
 }
 
-func (msg VulnerableMsg) GetSigners() []sdk.AccAddress {
+func (msg VulnerableMsg) GetSigners() []string {
 	// Should return proper signers but doesn't validate
-	return []sdk.AccAddress{}
+	return []string{}
 }
 
 func main() {
@@ -115,7 +112,7 @@ func main() {
 		balances: make(map[string]uint64),
 		owner:    "initial_owner",
 	}
-	
+
 	// Demonstrate vulnerabilities
 	contract.PanicFunction() // Will panic
 }
