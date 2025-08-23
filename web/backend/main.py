@@ -316,18 +316,30 @@ async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
     try:
         while True:
-            data = await websocket.receive_text()
-            message = json.loads(data)
-            
-            if message.get("type") == "ping":
+            try:
+                # Wait for messages with timeout
+                data = await asyncio.wait_for(websocket.receive_text(), timeout=30.0)
+                message = json.loads(data)
+
+                if message.get("type") == "ping":
+                    await manager.send_personal_message(
+                        json.dumps({"type": "pong", "timestamp": datetime.now().isoformat()}),
+                        websocket
+                    )
+                else:
+                    # Echo message back
+                    await manager.send_personal_message(data, websocket)
+
+            except asyncio.TimeoutError:
+                # Send ping to keep connection alive
                 await manager.send_personal_message(
-                    json.dumps({"type": "pong", "timestamp": datetime.now().isoformat()}),
+                    json.dumps({"type": "ping", "timestamp": datetime.now().isoformat()}),
                     websocket
                 )
-            else:
-                # Echo message back
-                await manager.send_personal_message(data, websocket)
-                
+            except Exception as e:
+                print(f"WebSocket error: {e}")
+                break
+
     except WebSocketDisconnect:
         manager.disconnect(websocket)
 

@@ -1,4 +1,4 @@
-import { Routes, Route, useLocation } from 'react-router-dom'
+import { Routes, Route } from 'react-router-dom'
 import { Toaster } from './components/ui/toaster'
 import { ThemeProvider } from './components/theme-provider'
 import Layout from './components/layout/Layout'
@@ -8,27 +8,15 @@ import ResultsPage from './pages/ResultsPage'
 import NotFoundPage from './pages/NotFoundPage'
 
 function App() {
-  const location = useLocation()
-
-  // Simple routing based on pathname
-  const renderPage = () => {
-    switch (location.pathname) {
-      case '/':
-        return <HomePage />
-      case '/analyze':
-        return <AnalysisPage />
-      default:
-        if (location.pathname.startsWith('/results/')) {
-          return <ResultsPage />
-        }
-        return <NotFoundPage />
-    }
-  }
-
   return (
     <ThemeProvider defaultTheme="light" storageKey="contractquard-ui-theme">
       <Layout>
-        {renderPage()}
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/analyze" element={<AnalysisPage />} />
+          <Route path="/results/:analysisId" element={<ResultsPage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
       </Layout>
       <Toaster />
     </ThemeProvider>
