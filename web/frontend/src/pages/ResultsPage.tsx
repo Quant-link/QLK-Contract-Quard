@@ -9,75 +9,42 @@ import AnalysisSummary from '@/components/analysis/AnalysisSummary'
 import FindingCard from '@/components/analysis/FindingCard'
 import { AnalysisResponse, Finding } from '@/types'
 import { useToast } from '@/hooks/use-toast'
+import { useAnalysisResult } from '@/hooks/useAnalysis'
+import { useAnalysisStore, useAnalysisSelectors } from '@/store/analysisStore'
 
 export default function ResultsPage() {
   const { analysisId } = useParams<{ analysisId: string }>()
-  const [analysisResult, setAnalysisResult] = useState<AnalysisResponse | null>(null)
-  const [filteredFindings, setFilteredFindings] = useState<Finding[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [severityFilter, setSeverityFilter] = useState<string>('all')
   const { toast } = useToast()
 
+  // Use React Query for data fetching
+  const {
+    data: analysisResult,
+    isLoading: loading,
+    error: queryError
+  } = useAnalysisResult(analysisId)
+
+  // Use store for UI state
+  const {
+    selectedSeverityFilter,
+    searchTerm,
+    setSeverityFilter,
+    setSearchTerm
+  } = useAnalysisStore()
+
+  const { getFilteredFindings } = useAnalysisSelectors()
+  const [filteredFindings, setFilteredFindings] = useState<Finding[]>([])
+
+  const error = queryError ? 'Failed to load analysis results' : null
+
+  // Update filtered findings when data or filters change
   useEffect(() => {
-    const fetchResults = async () => {
-      if (!analysisId) {
-        setError('No analysis ID provided')
-        setLoading(false)
-        return
-      }
-
-      try {
-        const response = await fetch(`/api/analysis/${analysisId}`)
-        
-        if (!response.ok) {
-          if (response.status === 404) {
-            setError('Analysis results not found. Results may have expired or the analysis ID is invalid.')
-          } else {
-            throw new Error(`Failed to fetch results: ${response.statusText}`)
-          }
-          return
-        }
-
-        const data: AnalysisResponse = await response.json()
-        setAnalysisResult(data)
-        setFilteredFindings(data.findings)
-      } catch (err) {
-        console.error('Error fetching results:', err)
-        setError(err instanceof Error ? err.message : 'Failed to load analysis results')
-      } finally {
-        setLoading(false)
-      }
+    if (analysisResult?.findings) {
+      const filtered = getFilteredFindings(analysisResult.findings)
+      setFilteredFindings(filtered)
     }
+  }, [analysisResult, selectedSeverityFilter, searchTerm, getFilteredFindings])
 
-    fetchResults()
-  }, [analysisId])
 
-  useEffect(() => {
-    if (!analysisResult) return
-
-    let filtered = analysisResult.findings
-
-    // Apply severity filter
-    if (severityFilter !== 'all') {
-      filtered = filtered.filter(finding => 
-        finding.severity.toLowerCase() === severityFilter.toLowerCase()
-      )
-    }
-
-    // Apply search filter
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase()
-      filtered = filtered.filter(finding =>
-        finding.title.toLowerCase().includes(term) ||
-        finding.description.toLowerCase().includes(term) ||
-        finding.detector.toLowerCase().includes(term)
-      )
-    }
-
-    setFilteredFindings(filtered)
-  }, [analysisResult, searchTerm, severityFilter])
 
   const handleExport = () => {
     if (!analysisResult) return
@@ -227,7 +194,7 @@ export default function ResultsPage() {
             </div>
 
             {/* Severity Filter */}
-            <Select value={severityFilter} onValueChange={setSeverityFilter}>
+            <Select value={selectedSeverityFilter} onValueChange={setSeverityFilter}>
               <SelectTrigger className="w-40">
                 <Filter className="mr-2 h-4 w-4" />
                 <SelectValue placeholder="Filter by severity" />

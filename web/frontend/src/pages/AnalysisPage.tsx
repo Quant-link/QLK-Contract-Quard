@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Upload, Play, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -8,13 +8,39 @@ import FileUpload from '@/components/analysis/FileUpload'
 import AnalysisProgress from '@/components/analysis/AnalysisProgress'
 import { UploadedFile } from '@/types'
 import { useToast } from '@/hooks/use-toast'
+import { useAnalysis } from '@/hooks/useAnalysis'
+import { useAnalysisStore } from '@/store/analysisStore'
+import { useWebSocket } from '@/hooks/useWebSocket'
 
 export default function AnalysisPage() {
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [analysisId, setAnalysisId] = useState<string | null>(null)
   const navigate = useNavigate()
   const { toast } = useToast()
+  const { analyzeFile, isAnalyzing } = useAnalysis()
+  const {
+    uploadedFiles,
+    setUploadedFiles,
+    resetAnalysisSession,
+    addToHistory
+  } = useAnalysisStore()
+
+  const [analysisId, setAnalysisId] = useState<string | null>(null)
+
+  // WebSocket for real-time updates
+  const { subscribe } = useWebSocket({
+    onConnect: () => console.log('Connected to WebSocket'),
+    onError: (error) => console.error('WebSocket error:', error)
+  })
+
+  // Subscribe to WebSocket events
+  useEffect(() => {
+    const unsubscribe = subscribe('analysis_complete', (data) => {
+      if (data.analysis_id === analysisId) {
+        handleAnalysisComplete()
+      }
+    })
+
+    return unsubscribe
+  }, [analysisId, subscribe])
 
   const handleFilesSelected = (files: UploadedFile[]) => {
     setUploadedFiles(files)
@@ -30,46 +56,36 @@ export default function AnalysisPage() {
       return
     }
 
-    setIsAnalyzing(true)
-    
     try {
-      // For now, we'll analyze the first file
-      // In a real implementation, you might want to analyze all files
+      // Analyze the first file (for now)
       const firstFile = uploadedFiles[0]
-      
-      const formData = new FormData()
-      formData.append('file', firstFile.file)
+      const result = await analyzeFile(firstFile.file)
 
-      const response = await fetch('/api/analyze', {
-        method: 'POST',
-        body: formData
-      })
+      if (result) {
+        setAnalysisId(result.analysis_id)
+        addToHistory(result)
 
-      if (!response.ok) {
-        throw new Error(`Analysis failed: ${response.statusText}`)
+        toast({
+          title: "Analysis completed",
+          description: `Found ${result.metadata.total_findings} security findings.`
+        })
+
+        // Navigate to results after a short delay
+        setTimeout(() => {
+          navigate(`/results/${result.analysis_id}`)
+        }, 1000)
       }
-
-      const result = await response.json()
-      setAnalysisId(result.analysis_id)
-      
-      toast({
-        title: "Analysis started",
-        description: "Your smart contract is being analyzed. This may take a few moments."
-      })
-
     } catch (error) {
       console.error('Analysis error:', error)
-      setIsAnalyzing(false)
       toast({
         title: "Analysis failed",
-        description: error instanceof Error ? error.message : "An unexpected error occurred.",
+        description: "An unexpected error occurred during analysis.",
         variant: "destructive"
       })
     }
   }
 
   const handleAnalysisComplete = () => {
-    setIsAnalyzing(false)
     if (analysisId) {
       navigate(`/results/${analysisId}`)
     }
