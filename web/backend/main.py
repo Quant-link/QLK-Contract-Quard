@@ -7,10 +7,12 @@ import os
 import sys
 import time
 import logging
+import hashlib
+import re
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 import uvicorn
-from fastapi import FastAPI, HTTPException, UploadFile, File, WebSocket, WebSocketDisconnect, Request
+from fastapi import FastAPI, HTTPException, UploadFile, File, WebSocket, WebSocketDisconnect, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
@@ -19,28 +21,19 @@ import json
 import asyncio
 from datetime import datetime
 import uuid
-# import structlog
+from sqlalchemy.orm import Session
+
+# Import our models and analyzers
+from models import AnalysisResponse, HealthResponse, SeverityLevel
+from database import get_db, init_db, Analysis, Finding, CodeMetrics
+from analyzers.analyzer_factory import analyzer_factory
 
 # Simple logging
 import logging
 logger = logging.getLogger(__name__)
 
-# Mock analyzer for demo
-class MockAnalyzer:
-    def analyze_file(self, filename, content, config=None):
-        # Mock analysis results
-        return [
-            type('Finding', (), {
-                'detector': 'reentrancy',
-                'severity': type('Severity', (), {'value': 'HIGH'})(),
-                'title': 'Potential Reentrancy Vulnerability',
-                'description': 'This function may be vulnerable to reentrancy attacks',
-                'line_number': 42,
-                'column': 10,
-                'code_snippet': 'function withdraw() public {',
-                'recommendation': 'Use the checks-effects-interactions pattern'
-            })()
-        ]
+# Initialize database
+init_db()
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -82,8 +75,7 @@ async def log_requests(request: Request, call_next):
     print(f"{request.method} {request.url} - {response.status_code} - {process_time:.3f}s")
     return response
 
-# Global analyzer instance and start time
-analyzer = MockAnalyzer()
+# Global start time
 start_time = time.time()
 
 # In-memory storage for analysis results (production'da database kullanılır)
@@ -134,8 +126,9 @@ manager = ConnectionManager()
 async def health_check():
     """Health check endpoint with system status"""
     try:
-        # Check analyzer availability
-        analyzer_status = "healthy" if analyzer else "unavailable"
+        # Check analyzer factory availability
+        supported_languages = analyzer_factory.get_supported_extensions()
+        analyzer_status = "healthy" if supported_languages else "unavailable"
 
         # System uptime (simplified)
         uptime = time.time() - start_time if 'start_time' in globals() else 0
@@ -202,9 +195,31 @@ async def analyze_contract(file: UploadFile = File(...)):
 
         print(f"Analysis started: {analysis_id} - {file.filename} ({len(content)} bytes)")
 
-        # Perform analysis
+        # Get appropriate analyzer for file type
+        language = file_ext[1:]  # Remove the dot
+        analyzer = analyzer_factory.get_analyzer(language)
+
+        if not analyzer:
+            raise HTTPException(
+                status_code=400,
+                detail=f"No analyzer available for {language} files"
+            )
+
+        # Calculate file hash for caching
+        file_hash = hashlib.sha256(content).hexdigest()
+
+        # Broadcast analysis start via WebSocket
+        await manager.broadcast(json.dumps({
+            "type": "analysis_started",
+            "analysis_id": analysis_id,
+            "filename": file.filename,
+            "language": language,
+            "timestamp": datetime.now().isoformat()
+        }))
+
+        # Perform real analysis
         findings = analyzer.analyze_file(file.filename, content_str)
-        
+
         # Convert findings to dict format with enhanced data
         findings_dict = []
         for finding in findings:
@@ -236,6 +251,63 @@ async def analyze_contract(file: UploadFile = File(...)):
             "info_count": len([f for f in findings_dict if f["severity"] == "INFO"])
         }
 
+        # Calculate risk score
+        risk_score = analyzer.calculate_risk_score(findings)
+
+        # Store in database (with fallback to in-memory)
+        try:
+            db = next(get_db())
+
+            # Create analysis record
+            db_analysis = Analysis(
+                id=analysis_id,
+                filename=file.filename,
+                file_hash=file_hash,
+                language=language,
+                file_size=len(content),
+                status="COMPLETED",
+                risk_score=risk_score,
+                total_findings=len(findings_dict),
+                analysis_duration_ms=analysis_duration,
+                **severity_counts
+            )
+            db.add(db_analysis)
+
+            # Create finding records
+            for finding_dict in findings_dict:
+                db_finding = Finding(
+                    analysis_id=analysis_id,
+                    detector_name=finding_dict["detector"],
+                    severity=finding_dict["severity"],
+                    category=getattr(findings[findings_dict.index(finding_dict)], 'category', 'Security'),
+                    title=finding_dict["title"],
+                    description=finding_dict["description"],
+                    line_number=finding_dict["line_number"],
+                    column_number=finding_dict["column"],
+                    code_snippet=finding_dict["code_snippet"],
+                    recommendation=finding_dict["recommendation"],
+                    confidence=finding_dict["confidence"],
+                    impact=finding_dict["impact"],
+                    cwe_id=finding_dict["cwe_id"],
+                    references=finding_dict["references"]
+                )
+                db.add(db_finding)
+
+            # Create code metrics
+            db_metrics = CodeMetrics(
+                analysis_id=analysis_id,
+                lines_of_code=len(content_str.splitlines()),
+                function_count=len(re.findall(r'function\s+\w+', content_str, re.IGNORECASE)),
+                contract_count=len(re.findall(r'contract\s+\w+', content_str, re.IGNORECASE))
+            )
+            db.add(db_metrics)
+
+            db.commit()
+            print(f"Analysis saved to database: {analysis_id}")
+
+        except Exception as e:
+            print(f"Database save failed, using in-memory storage: {e}")
+
         # Prepare response
         response = AnalysisResponse(
             analysis_id=analysis_id,
@@ -246,14 +318,15 @@ async def analyze_contract(file: UploadFile = File(...)):
                 "file_size": len(content),
                 "total_findings": len(findings_dict),
                 "analysis_duration_ms": analysis_duration,
-                "language": file_ext[1:],  # Remove the dot
+                "language": language,
                 "lines_of_code": len(content_str.splitlines()),
+                "risk_score": risk_score,
                 **severity_counts
             },
             timestamp=datetime.now().isoformat()
         )
-        
-        # Store analysis result for later retrieval
+
+        # Store analysis result for later retrieval (fallback)
         analysis_results[analysis_id] = response
 
         # Log successful analysis
@@ -288,18 +361,69 @@ async def analyze_contract(file: UploadFile = File(...)):
         )
 
 @app.get("/api/analysis/{analysis_id}", response_model=AnalysisResponse)
-async def get_analysis_result(analysis_id: str):
+async def get_analysis_result(analysis_id: str, db: Session = Depends(get_db)):
     """Get analysis result by ID"""
     try:
-        if analysis_id not in analysis_results:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Analysis with ID {analysis_id} not found"
+        # Try database first
+        db_analysis = db.query(Analysis).filter(Analysis.id == analysis_id).first()
+
+        if db_analysis:
+            # Get findings from database
+            db_findings = db.query(Finding).filter(Finding.analysis_id == analysis_id).all()
+
+            findings_dict = []
+            for finding in db_findings:
+                findings_dict.append({
+                    "id": str(finding.id),
+                    "detector": finding.detector_name,
+                    "severity": finding.severity,
+                    "title": finding.title,
+                    "description": finding.description,
+                    "line_number": finding.line_number,
+                    "column": finding.column_number,
+                    "code_snippet": finding.code_snippet,
+                    "recommendation": finding.recommendation,
+                    "confidence": finding.confidence,
+                    "impact": finding.impact,
+                    "cwe_id": finding.cwe_id,
+                    "references": finding.references or []
+                })
+
+            # Prepare response from database
+            response = AnalysisResponse(
+                analysis_id=str(db_analysis.id),
+                status="completed",
+                findings=findings_dict,
+                metadata={
+                    "filename": db_analysis.filename,
+                    "file_size": db_analysis.file_size,
+                    "total_findings": db_analysis.total_findings,
+                    "analysis_duration_ms": db_analysis.analysis_duration_ms,
+                    "language": db_analysis.language,
+                    "risk_score": db_analysis.risk_score,
+                    "critical_count": db_analysis.critical_count,
+                    "high_count": db_analysis.high_count,
+                    "medium_count": db_analysis.medium_count,
+                    "low_count": db_analysis.low_count,
+                    "info_count": db_analysis.info_count
+                },
+                timestamp=db_analysis.created_at.isoformat()
             )
 
-        result = analysis_results[analysis_id]
-        print(f"Retrieved analysis result: {analysis_id}")
-        return result
+            print(f"Retrieved analysis result from database: {analysis_id}")
+            return response
+
+        # Fallback to in-memory storage
+        if analysis_id in analysis_results:
+            result = analysis_results[analysis_id]
+            print(f"Retrieved analysis result from memory: {analysis_id}")
+            return result
+
+        # Not found anywhere
+        raise HTTPException(
+            status_code=404,
+            detail=f"Analysis with ID {analysis_id} not found"
+        )
 
     except HTTPException:
         raise
@@ -309,6 +433,66 @@ async def get_analysis_result(analysis_id: str):
             status_code=500,
             detail="Internal server error while retrieving analysis result"
         )
+
+@app.get("/api/analyses")
+async def get_analysis_history(limit: int = 50, offset: int = 0, db: Session = Depends(get_db)):
+    """Get analysis history with pagination"""
+    try:
+        analyses = db.query(Analysis).order_by(Analysis.created_at.desc()).offset(offset).limit(limit).all()
+
+        history = []
+        for analysis in analyses:
+            history.append({
+                "analysis_id": str(analysis.id),
+                "filename": analysis.filename,
+                "language": analysis.language,
+                "status": analysis.status,
+                "risk_score": analysis.risk_score,
+                "total_findings": analysis.total_findings,
+                "critical_count": analysis.critical_count,
+                "high_count": analysis.high_count,
+                "medium_count": analysis.medium_count,
+                "low_count": analysis.low_count,
+                "info_count": analysis.info_count,
+                "analysis_duration_ms": analysis.analysis_duration_ms,
+                "created_at": analysis.created_at.isoformat()
+            })
+
+        return {"analyses": history, "total": len(history)}
+
+    except Exception as e:
+        print(f"Error retrieving analysis history: {e}")
+        raise HTTPException(status_code=500, detail="Error retrieving analysis history")
+
+@app.get("/api/statistics")
+async def get_statistics(db: Session = Depends(get_db)):
+    """Get analysis statistics"""
+    try:
+        total_analyses = db.query(Analysis).count()
+
+        # Get severity distribution
+        critical_count = db.query(Analysis).filter(Analysis.critical_count > 0).count()
+        high_count = db.query(Analysis).filter(Analysis.high_count > 0).count()
+        medium_count = db.query(Analysis).filter(Analysis.medium_count > 0).count()
+
+        # Get language distribution
+        from sqlalchemy import func
+        language_stats = db.query(Analysis.language, func.count(Analysis.id)).group_by(Analysis.language).all()
+
+        return {
+            "total_analyses": total_analyses,
+            "severity_distribution": {
+                "critical": critical_count,
+                "high": high_count,
+                "medium": medium_count
+            },
+            "language_distribution": {lang: count for lang, count in language_stats},
+            "supported_languages": analyzer_factory.get_supported_extensions()
+        }
+
+    except Exception as e:
+        print(f"Error retrieving statistics: {e}")
+        raise HTTPException(status_code=500, detail="Error retrieving statistics")
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
