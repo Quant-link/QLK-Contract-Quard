@@ -261,24 +261,9 @@ class AIAnalyzer(BaseAnalyzer):
         return []
     
     def _mock_ai_analysis(self, filename: str, content: str) -> List[AnalysisFinding]:
-        """Mock AI analysis when AI services are not available"""
-        findings = []
-        
-        # Simulate AI-like analysis with pattern matching
-        if 'function' in content and 'public' in content:
-            findings.append(AnalysisFinding(
-                detector="ai_mock_analysis",
-                severity=Severity.INFO,
-                title="AI Analysis Available",
-                description="AI-powered analysis is available with proper API keys",
-                line_number=1,
-                code_snippet="",
-                recommendation="Set OPENAI_API_KEY or LOCAL_AI_MODEL_PATH environment variable to enable AI analysis",
-                category="AI Analysis",
-                references=["https://platform.openai.com/api-keys"]
-            ))
-        
-        return findings
+        """Fallback when no AI services are available - should not be used with HF integration"""
+        # This should not be called when Hugging Face is available
+        return []
 
 # AI Integration Status
 class AIIntegrationStatus:

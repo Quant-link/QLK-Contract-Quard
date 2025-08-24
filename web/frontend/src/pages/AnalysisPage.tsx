@@ -62,9 +62,9 @@ export default function AnalysisPage() {
           description: `Found ${result.metadata.total_findings} security findings.`
         })
 
-        // Navigate to results after a short delay
+        // Navigate to detailed analysis results after a short delay
         setTimeout(() => {
-          navigate(`/results/${result.analysis_id}`)
+          navigate(`/analysis/${result.analysis_id}`)
         }, 1000)
       }
     } catch (error) {
@@ -79,7 +79,7 @@ export default function AnalysisPage() {
 
   const handleAnalysisComplete = () => {
     if (analysisId) {
-      navigate(`/results/${analysisId}`)
+      navigate(`/analysis/${analysisId}`)
     }
   }
 

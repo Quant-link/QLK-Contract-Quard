@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, Download, Share2, RefreshCw, AlertTriangle, CheckCircle, Clock, FileText } from 'lucide-react'
+import { ArrowLeft, Download, Share2, RefreshCw, AlertTriangle, CheckCircle, Clock, FileText, Brain } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
@@ -9,6 +9,7 @@ import { Separator } from '../components/ui/separator'
 import AnalysisSummary from '../components/analysis/AnalysisSummary'
 import FindingCard from '../components/analysis/FindingCard'
 import CodeViewer from '../components/analysis/CodeViewer'
+import AIAnalysisSection from '../components/analysis/AIAnalysisSection'
 import { AnalysisResponse } from '../types'
 import { apiService } from '../services/api'
 import { useToast } from '../hooks/use-toast'
@@ -140,9 +141,15 @@ export default function AnalysisResultsPage() {
           <Separator orientation="vertical" className="h-6" />
           <div>
             <h1 className="text-3xl font-bold">{analysis.metadata.filename}</h1>
-            <p className="text-muted-foreground">
-              Analysis completed {formatDistanceToNow(new Date(analysis.timestamp), { addSuffix: true })}
-            </p>
+            <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+              <span>Analysis completed {formatDistanceToNow(new Date(analysis.timestamp), { addSuffix: true })}</span>
+              <span>•</span>
+              <span>ID: {analysis.analysis_id.substring(0, 8)}...</span>
+              <span>•</span>
+              <span>{analysis.metadata.language?.toUpperCase()} Contract</span>
+              <span>•</span>
+              <span>{(analysis.metadata.file_size / 1024).toFixed(1)} KB</span>
+            </div>
           </div>
         </div>
         
@@ -210,10 +217,14 @@ export default function AnalysisResultsPage() {
 
       {/* Main Content */}
       <Tabs defaultValue="findings" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="findings" className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4" />
             Findings ({analysis.findings.length})
+          </TabsTrigger>
+          <TabsTrigger value="ai-analysis" className="flex items-center gap-2">
+            <Brain className="h-4 w-4" />
+            AI Analysis
           </TabsTrigger>
           <TabsTrigger value="code" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
@@ -312,6 +323,18 @@ export default function AnalysisResultsPage() {
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+
+        <TabsContent value="ai-analysis" className="space-y-6">
+          <AIAnalysisSection
+            findings={analysis.findings}
+            analysisMetrics={{
+              complexity_score: analysis.metadata.complexity_score,
+              security_score: 100 - (analysis.metadata.risk_score || 0),
+              gas_efficiency: analysis.metadata.gas_efficiency,
+              code_quality: analysis.metadata.code_quality
+            }}
+          />
         </TabsContent>
 
         <TabsContent value="code" className="space-y-6">

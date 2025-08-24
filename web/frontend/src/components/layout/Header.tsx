@@ -1,7 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Shield, Moon, Sun, Monitor, Brain, Zap } from 'lucide-react'
+import { Shield, Moon, Sun, Monitor } from 'lucide-react'
 import { Button } from '../ui/button'
-import { Badge } from '../ui/badge'
 import { useTheme } from '../theme-provider'
 import {
   DropdownMenu,
@@ -10,33 +9,12 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu'
 import NotificationCenter from '../notifications/NotificationCenter'
-import { useState, useEffect } from 'react'
-import { apiService } from '../../services/api'
 
 export default function Header() {
   const location = useLocation()
   const { setTheme } = useTheme()
-  const [aiStatus, setAiStatus] = useState<any>(null)
 
   const isActive = (path: string) => location.pathname === path
-
-  // Fetch AI status
-  useEffect(() => {
-    const fetchAiStatus = async () => {
-      try {
-        const response = await fetch('http://localhost:8000/api/ai-status')
-        const data = await response.json()
-        setAiStatus(data)
-      } catch (error) {
-        console.error('Failed to fetch AI status:', error)
-      }
-    }
-
-    fetchAiStatus()
-    // Refresh every 30 seconds
-    const interval = setInterval(fetchAiStatus, 30000)
-    return () => clearInterval(interval)
-  }, [])
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -69,29 +47,6 @@ export default function Header() {
 
         {/* Theme Toggle and Actions */}
         <div className="flex items-center space-x-2">
-          {/* AI Status Indicator */}
-          {aiStatus && (
-            <div className="flex items-center space-x-1">
-              <Brain className="h-4 w-4 text-blue-500" />
-              <Badge variant={
-                aiStatus.ai_providers?.huggingface?.huggingface_available ||
-                aiStatus.ai_providers?.openai?.openai_available ?
-                "default" : "secondary"
-              }>
-                {aiStatus.ai_providers?.huggingface?.huggingface_available ?
-                  "Grok AI" :
-                  aiStatus.ai_providers?.openai?.openai_available ?
-                  "OpenAI" :
-                  "AI Ready"
-                }
-              </Badge>
-              {(aiStatus.ai_providers?.huggingface?.huggingface_available ||
-                aiStatus.ai_providers?.openai?.openai_available) && (
-                <Zap className="h-3 w-3 text-green-500 animate-pulse" />
-              )}
-            </div>
-          )}
-
           <NotificationCenter />
 
           <DropdownMenu>
