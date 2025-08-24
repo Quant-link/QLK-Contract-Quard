@@ -48,14 +48,43 @@ class SolidityAnalyzer(BaseAnalyzer):
         findings.extend(self._analyze_uninitialized_storage(content))
         findings.extend(self._analyze_deprecated_functions(content))
         findings.extend(self._analyze_visibility_issues(content))
-        
-        # Try Slither if available
+
+        # Enhanced Slither Integration
         try:
-            slither_findings = self._run_slither_analysis(filename, content)
+            from .enhanced_slither import EnhancedSlitherAnalyzer
+            enhanced_slither = EnhancedSlitherAnalyzer()
+            slither_findings = enhanced_slither.analyze_file(filename, content)
             findings.extend(slither_findings)
         except Exception as e:
-            print(f"Slither analysis failed: {e}")
-        
+            print(f"Enhanced Slither analysis failed: {e}")
+
+        # AST-based Analysis
+        try:
+            from .ast_analyzer import ASTAnalyzer
+            ast_analyzer = ASTAnalyzer()
+            ast_findings = ast_analyzer.analyze_file(filename, content)
+            findings.extend(ast_findings)
+        except Exception as e:
+            print(f"AST analysis failed: {e}")
+
+        # AI-powered Analysis
+        try:
+            from .ai_analyzer import AIAnalyzer
+            ai_analyzer = AIAnalyzer()
+            ai_findings = ai_analyzer.analyze_file(filename, content)
+            findings.extend(ai_findings)
+        except Exception as e:
+            print(f"AI analysis failed: {e}")
+
+        # Hugging Face AI Analysis with Grok
+        try:
+            from .huggingface_analyzer import HuggingFaceAnalyzer
+            hf_analyzer = HuggingFaceAnalyzer()
+            hf_findings = hf_analyzer.analyze_file(filename, content)
+            findings.extend(hf_findings)
+        except Exception as e:
+            print(f"Hugging Face AI analysis failed: {e}")
+
         return findings
     
     def _analyze_reentrancy(self, content: str) -> List[AnalysisFinding]:

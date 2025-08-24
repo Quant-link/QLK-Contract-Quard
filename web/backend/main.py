@@ -145,6 +145,51 @@ async def health_check():
         print(f"Health check failed: {e}")
         raise HTTPException(status_code=503, detail="Service temporarily unavailable")
 
+@app.get("/api/ai-status")
+async def ai_status():
+    """Get AI integration status and capabilities"""
+    try:
+        from analyzers.ai_analyzer import AIIntegrationStatus
+        from analyzers.huggingface_analyzer import HuggingFaceStatus
+
+        # Get both OpenAI and Hugging Face status
+        openai_status = AIIntegrationStatus.get_status()
+        hf_status = HuggingFaceStatus.get_status()
+
+        # Combine status information
+        combined_status = {
+            "ai_providers": {
+                "openai": openai_status,
+                "huggingface": hf_status
+            },
+            "active_models": [],
+            "total_capabilities": []
+        }
+
+        # Add active models
+        if openai_status.get("openai_available"):
+            combined_status["active_models"].extend(openai_status.get("supported_models", []))
+
+        if hf_status.get("huggingface_available"):
+            combined_status["active_models"].extend(hf_status.get("available_models", []))
+
+        # Combine capabilities
+        combined_status["total_capabilities"].extend(openai_status.get("capabilities", []))
+        combined_status["total_capabilities"].extend(hf_status.get("capabilities", []))
+
+        return combined_status
+
+    except Exception as e:
+        return {
+            "error": str(e),
+            "ai_providers": {
+                "openai": {"available": False},
+                "huggingface": {"available": False}
+            },
+            "active_models": [],
+            "total_capabilities": []
+        }
+
 @app.post("/api/analyze", response_model=AnalysisResponse)
 async def analyze_contract(file: UploadFile = File(...)):
     """Analyze uploaded smart contract file with comprehensive validation"""
