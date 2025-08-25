@@ -15,12 +15,14 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, UploadFile, File, WebSocket, WebSocketDisconnect, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
 import json
 import asyncio
 from datetime import datetime
 import uuid
+import csv
+import io
 from sqlalchemy.orm import Session
 
 # Import our models and analyzers
@@ -189,6 +191,317 @@ async def ai_status():
             "active_models": [],
             "total_capabilities": []
         }
+
+@app.get("/api/analysis/{analysis_id}/export")
+async def export_analysis(
+    analysis_id: str,
+    format: str = "json",
+    db: Session = Depends(get_db)
+):
+    """Export analysis results in various formats"""
+    try:
+        # Get analysis from database
+        analysis = db.query(Analysis).filter(Analysis.id == analysis_id).first()
+        if not analysis:
+            raise HTTPException(status_code=404, detail="Analysis not found")
+
+        # Get findings
+        findings = db.query(Finding).filter(Finding.analysis_id == analysis_id).all()
+
+        # Get code metrics
+        code_metrics = db.query(CodeMetrics).filter(CodeMetrics.analysis_id == analysis_id).first()
+
+        # Prepare export data
+        export_data = {
+            "analysis_id": analysis.id,
+            "filename": analysis.filename,
+            "language": analysis.language,
+            "file_size": analysis.file_size,
+            "status": analysis.status,
+            "risk_score": analysis.risk_score,
+            "total_findings": analysis.total_findings,
+            "severity_counts": {
+                "critical": analysis.critical_count,
+                "high": analysis.high_count,
+                "medium": analysis.medium_count,
+                "low": analysis.low_count,
+                "info": analysis.info_count
+            },
+            "analysis_duration_ms": analysis.analysis_duration_ms,
+            "created_at": analysis.created_at.isoformat() if analysis.created_at else None,
+            "findings": [
+                {
+                    "id": finding.id,
+                    "detector": finding.detector_name,
+                    "severity": finding.severity,
+                    "category": finding.category,
+                    "title": finding.title,
+                    "description": finding.description,
+                    "line_number": finding.line_number,
+                    "column_number": finding.column_number,
+                    "code_snippet": finding.code_snippet,
+                    "recommendation": finding.recommendation,
+                    "confidence": finding.confidence,
+                    "impact": finding.impact,
+                    "cwe_id": finding.cwe_id,
+                    "references": []
+                }
+                for finding in findings
+            ],
+            "code_metrics": {
+                "lines_of_code": code_metrics.lines_of_code if code_metrics else None,
+                "cyclomatic_complexity": code_metrics.cyclomatic_complexity if code_metrics else None,
+                "function_count": code_metrics.function_count if code_metrics else None,
+                "contract_count": code_metrics.contract_count if code_metrics else None,
+                "dependency_count": code_metrics.dependency_count if code_metrics else None,
+                "test_coverage": float(code_metrics.test_coverage) if code_metrics and code_metrics.test_coverage else None
+            } if code_metrics else None
+        }
+
+        if format.lower() == "json":
+            return export_data
+
+        elif format.lower() == "csv":
+            return _export_csv(export_data)
+
+        elif format.lower() == "pdf":
+            return _export_pdf(export_data)
+
+        else:
+            raise HTTPException(status_code=400, detail="Unsupported export format. Use json, csv, or pdf")
+
+    except Exception as e:
+        print(f"Export failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
+
+def _export_csv(data):
+    """Export analysis data as CSV"""
+    output = io.StringIO()
+
+    # Write analysis summary
+    writer = csv.writer(output)
+    writer.writerow(["Analysis Summary"])
+    writer.writerow(["Field", "Value"])
+    writer.writerow(["Analysis ID", data["analysis_id"]])
+    writer.writerow(["Filename", data["filename"]])
+    writer.writerow(["Language", data["language"]])
+    writer.writerow(["File Size (bytes)", data["file_size"]])
+    writer.writerow(["Risk Score", data["risk_score"]])
+    writer.writerow(["Total Findings", data["total_findings"]])
+    writer.writerow(["Analysis Duration (ms)", data["analysis_duration_ms"]])
+    writer.writerow(["Created At", data["created_at"]])
+    writer.writerow([])
+
+    # Write severity counts
+    writer.writerow(["Severity Distribution"])
+    writer.writerow(["Severity", "Count"])
+    for severity, count in data["severity_counts"].items():
+        writer.writerow([severity.title(), count])
+    writer.writerow([])
+
+    # Write findings
+    writer.writerow(["Security Findings"])
+    writer.writerow([
+        "ID", "Detector", "Severity", "Category", "Title", "Description",
+        "Line", "Column", "Recommendation", "Confidence", "Impact", "CWE ID"
+    ])
+
+    for finding in data["findings"]:
+        writer.writerow([
+            finding["id"],
+            finding["detector"],
+            finding["severity"],
+            finding["category"],
+            finding["title"],
+            finding["description"],
+            finding["line_number"],
+            finding["column_number"],
+            finding["recommendation"],
+            finding["confidence"],
+            finding["impact"],
+            finding["cwe_id"]
+        ])
+
+    output.seek(0)
+
+    return StreamingResponse(
+        io.BytesIO(output.getvalue().encode('utf-8')),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={data['filename']}_analysis.csv"}
+    )
+
+def _export_pdf(data):
+    """Export analysis data as PDF"""
+    try:
+        # Try to import reportlab
+        from reportlab.lib.pagesizes import letter, A4
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import inch
+        from reportlab.lib import colors
+
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4)
+        styles = getSampleStyleSheet()
+        story = []
+
+        # Title
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=24,
+            spaceAfter=30,
+            textColor=colors.darkblue
+        )
+        story.append(Paragraph("ContractQuard Security Analysis Report", title_style))
+        story.append(Spacer(1, 20))
+
+        # Analysis Summary
+        story.append(Paragraph("Analysis Summary", styles['Heading2']))
+        summary_data = [
+            ["Field", "Value"],
+            ["Filename", data["filename"]],
+            ["Language", data["language"]],
+            ["File Size", f"{data['file_size']} bytes"],
+            ["Risk Score", f"{data['risk_score']}/100"],
+            ["Total Findings", str(data["total_findings"])],
+            ["Analysis Duration", f"{data['analysis_duration_ms']} ms"],
+            ["Created At", data["created_at"]]
+        ]
+
+        summary_table = Table(summary_data)
+        summary_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 14),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        story.append(summary_table)
+        story.append(Spacer(1, 20))
+
+        # Severity Distribution
+        story.append(Paragraph("Severity Distribution", styles['Heading2']))
+        severity_data = [["Severity", "Count"]]
+        for severity, count in data["severity_counts"].items():
+            if count > 0:
+                severity_data.append([severity.title(), str(count)])
+
+        if len(severity_data) > 1:
+            severity_table = Table(severity_data)
+            severity_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 12),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.lightgrey),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            story.append(severity_table)
+        else:
+            story.append(Paragraph("No security findings detected.", styles['Normal']))
+
+        story.append(Spacer(1, 20))
+
+        # Findings Details
+        if data["findings"]:
+            story.append(Paragraph("Security Findings Details", styles['Heading2']))
+
+            for i, finding in enumerate(data["findings"], 1):
+                story.append(Paragraph(f"{i}. {finding['title']}", styles['Heading3']))
+
+                finding_details = [
+                    ["Field", "Value"],
+                    ["Severity", finding["severity"]],
+                    ["Category", finding["category"]],
+                    ["Detector", finding["detector"]],
+                    ["Line Number", str(finding["line_number"])],
+                    ["Confidence", finding["confidence"]],
+                    ["Impact", finding["impact"]],
+                    ["CWE ID", str(finding["cwe_id"]) if finding["cwe_id"] else "N/A"]
+                ]
+
+                finding_table = Table(finding_details, colWidths=[2*inch, 4*inch])
+                finding_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 10),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+                    ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                ]))
+                story.append(finding_table)
+
+                # Description
+                story.append(Paragraph("<b>Description:</b>", styles['Normal']))
+                story.append(Paragraph(finding["description"], styles['Normal']))
+
+                # Recommendation
+                if finding["recommendation"]:
+                    story.append(Paragraph("<b>Recommendation:</b>", styles['Normal']))
+                    story.append(Paragraph(finding["recommendation"], styles['Normal']))
+
+                story.append(Spacer(1, 15))
+
+        # Build PDF
+        doc.build(story)
+        buffer.seek(0)
+
+        return StreamingResponse(
+            io.BytesIO(buffer.getvalue()),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={data['filename']}_analysis.pdf"}
+        )
+
+    except ImportError:
+        # Fallback to simple text-based PDF if reportlab is not available
+        return _export_simple_pdf(data)
+
+def _export_simple_pdf(data):
+    """Simple text-based PDF export fallback"""
+    content = f"""
+ContractQuard Security Analysis Report
+
+Analysis Summary:
+- Filename: {data['filename']}
+- Language: {data['language']}
+- File Size: {data['file_size']} bytes
+- Risk Score: {data['risk_score']}/100
+- Total Findings: {data['total_findings']}
+- Analysis Duration: {data['analysis_duration_ms']} ms
+- Created At: {data['created_at']}
+
+Severity Distribution:
+"""
+
+    for severity, count in data['severity_counts'].items():
+        if count > 0:
+            content += f"- {severity.title()}: {count}\n"
+
+    content += "\nSecurity Findings:\n"
+
+    for i, finding in enumerate(data['findings'], 1):
+        content += f"""
+{i}. {finding['title']}
+   Severity: {finding['severity']}
+   Category: {finding['category']}
+   Line: {finding['line_number']}
+   Description: {finding['description']}
+   Recommendation: {finding['recommendation']}
+"""
+
+    return StreamingResponse(
+        io.BytesIO(content.encode('utf-8')),
+        media_type="text/plain",
+        headers={"Content-Disposition": f"attachment; filename={data['filename']}_analysis.txt"}
+    )
 
 @app.post("/api/analyze", response_model=AnalysisResponse)
 async def analyze_contract(file: UploadFile = File(...)):

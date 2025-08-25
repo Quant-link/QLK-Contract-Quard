@@ -108,6 +108,33 @@ export const apiService = {
     })
     return response.data
   },
+
+  // Download analysis export
+  async downloadAnalysis(analysisId: string, format: 'json' | 'pdf' | 'csv', filename: string): Promise<void> {
+    try {
+      const blob = await this.exportAnalysis(analysisId, format)
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+
+      // Set filename with appropriate extension
+      const extension = format
+      link.download = `${filename}_analysis.${extension}`
+
+      // Trigger download
+      document.body.appendChild(link)
+      link.click()
+
+      // Cleanup
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error(`Download failed:`, error)
+      throw error
+    }
+  },
 }
 
 // WebSocket service for real-time updates

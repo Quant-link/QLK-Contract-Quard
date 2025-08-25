@@ -10,6 +10,7 @@ import AnalysisSummary from '../components/analysis/AnalysisSummary'
 import FindingCard from '../components/analysis/FindingCard'
 import CodeViewer from '../components/analysis/CodeViewer'
 import AIAnalysisSection from '../components/analysis/AIAnalysisSection'
+import ExportDropdown from '../components/analysis/ExportDropdown'
 import { AnalysisResponse } from '../types'
 import { apiService } from '../services/api'
 import { useToast } from '../hooks/use-toast'
@@ -54,30 +55,7 @@ export default function AnalysisResultsPage() {
     }
   }
 
-  const handleExport = async (format: 'json' | 'pdf' | 'csv') => {
-    try {
-      const blob = await apiService.exportAnalysis(analysisId!, format)
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `analysis-${analysisId}.${format}`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-      
-      toast({
-        title: "Export successful",
-        description: `Analysis exported as ${format.toUpperCase()}`
-      })
-    } catch (err) {
-      toast({
-        title: "Export failed",
-        description: "Failed to export analysis",
-        variant: "destructive"
-      })
-    }
-  }
+
 
   const getRiskColor = (score: number) => {
     if (score >= 80) return 'text-red-600'
@@ -154,14 +132,10 @@ export default function AnalysisResultsPage() {
         </div>
         
         <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" onClick={() => handleExport('json')}>
-            <Download className="h-4 w-4 mr-2" />
-            JSON
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => handleExport('pdf')}>
-            <Download className="h-4 w-4 mr-2" />
-            PDF
-          </Button>
+          <ExportDropdown
+            analysisId={analysis.analysis_id}
+            filename={analysis.metadata.filename}
+          />
           <Button variant="outline" size="sm">
             <Share2 className="h-4 w-4 mr-2" />
             Share
