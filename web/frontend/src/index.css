@@ -87,6 +87,37 @@
   .bg-gradient-conic {
     background: conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops));
   }
+
+  .btn-custom-primary {
+    background-color: #4dace1 !important;
+    border-color: #4dace1 !important;
+    color: white !important;
+    transition: all 0.3s ease;
+  }
+
+  .btn-custom-primary:hover {
+    background-color: #4dace1 !important;
+    border-color: #4dace1 !important;
+    color: white !important;
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 10px 25px rgba(77, 172, 225, 0.3);
+  }
+
+  .btn-custom-outline {
+    background-color: transparent !important;
+    border-color: #4dace1 !important;
+    color: #4dace1 !important;
+    transition: all 0.3s ease;
+  }
+
+  .btn-custom-outline:hover {
+    background-color: #4dace1 !important;
+    border-color: #4dace1 !important;
+    color: white !important;
+    transform: translateY(-1px);
+    box-shadow: 0 10px 25px rgba(77, 172, 225, 0.3);
+  }
 }
 
 /* Custom scrollbar */
@@ -158,4 +189,176 @@
 
 .animate-fade-in-up {
   animation: fadeInUp 0.6s ease-out;
+}
+
+/* Global Layout Fixes */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+body {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+#root {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Container fixes */
+.container {
+  max-width: 100%;
+  margin: 0 auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Prevent horizontal scroll */
+.no-scroll-x {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Background container fixes */
+.bg-full-screen {
+  position: relative;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Hide scrollbars but keep functionality */
+html {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+  scroll-behavior: smooth; /* Smooth scrolling */
+}
+
+html::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none; /* Chrome, Safari, Opera */
+}
+
+body {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Hide scrollbars for all elements */
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Navbar improvements */
+header {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Navigation link hover effects */
+nav a {
+  position: relative;
+  overflow: hidden;
+}
+
+nav a::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+nav a:hover::before {
+  left: 100%;
+}
+
+/* Navigation link colors */
+.nav-link-active {
+  color: #4dace1 !important;
+}
+
+.nav-link-hover:hover {
+  color: #4dace1 !important;
+}
+
+/* Custom button styles */
+.btn-custom-primary {
+  background-color: #4dace1 !important;
+  border-color: #4dace1 !important;
+  color: white !important;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-custom-primary:hover {
+  background-color: #3a9bd1 !important;
+  border-color: #3a9bd1 !important;
+  color: white !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(77, 172, 225, 0.3);
+}
+
+.btn-custom-primary:active {
+  background-color: #2d8bc7 !important;
+  border-color: #2d8bc7 !important;
+  transform: translateY(0);
+}
+
+/* Custom outline button styles */
+.btn-custom-outline {
+  background-color: transparent !important;
+  border-color: #4dace1 !important;
+  color: #4dace1 !important;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-custom-outline:hover {
+  background-color: #4dace1 !important;
+  border-color: #4dace1 !important;
+  color: white !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(77, 172, 225, 0.3);
+}
+
+.btn-custom-outline:active {
+  background-color: #3a9bd1 !important;
+  border-color: #3a9bd1 !important;
+  transform: translateY(0);
+}
+
+/* Video container fixes */
+video {
+  max-width: 100%;
+  height: auto;
 }

@@ -121,22 +121,22 @@ export default function FindingCard({ finding, index }: FindingCardProps) {
             {/* Metadata */}
             <div className="flex flex-wrap gap-2">
               {finding.confidence && (
-                <div className="px-2 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700">
+                <div className="px-2 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
                   Confidence: {finding.confidence}
                 </div>
               )}
               {finding.impact && (
-                <div className="px-2 py-1 rounded-md text-xs font-medium bg-purple-50 text-purple-700">
+                <div className="px-2 py-1 rounded-md text-xs font-medium bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
                   Impact: {finding.impact}
                 </div>
               )}
               {finding.cwe_id && (
-                <div className="px-2 py-1 rounded-md text-xs font-medium bg-indigo-50 text-indigo-700">
+                <div className="px-2 py-1 rounded-md text-xs font-medium bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
                   CWE-{finding.cwe_id}
                 </div>
               )}
               {finding.category && (
-                <div className="px-2 py-1 rounded-md text-xs font-medium bg-gray-50 text-gray-700">
+                <div className="px-2 py-1 rounded-md text-xs font-medium bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
                   {finding.category}
                 </div>
               )}
@@ -146,8 +146,8 @@ export default function FindingCard({ finding, index }: FindingCardProps) {
             {finding.recommendation && (
               <div>
                 <h4 className="font-medium mb-2">Recommendation</h4>
-                <div className="bg-green-50 border border-green-200 rounded-md p-3">
-                  <p className="text-sm text-green-800">{finding.recommendation}</p>
+                <div className="bg-green-50 border border-green-200 rounded-md p-3 dark:bg-green-900/20 dark:border-green-800">
+                  <p className="text-sm text-green-800 dark:text-green-300">{finding.recommendation}</p>
                 </div>
               </div>
             )}

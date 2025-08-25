@@ -1,15 +1,36 @@
-import { Shield, Github, Twitter, Globe } from 'lucide-react'
+import { Github, Twitter, Globe } from 'lucide-react'
+import { useTheme } from '../theme-provider'
+import LogoBlack from '../../assets/logos/logo-black.svg'
+import LogoWhite from '../../assets/logos/logo-white.svg'
 
 export default function Footer() {
+  const { theme } = useTheme()
+
+  // Determine which logo to use based on theme
+  const getLogoSrc = () => {
+    if (theme === 'dark') {
+      return LogoWhite
+    } else if (theme === 'light') {
+      return LogoBlack
+    } else {
+      // System theme - check actual applied theme
+      const isDark = document.documentElement.classList.contains('dark')
+      return isDark ? LogoWhite : LogoBlack
+    }
+  }
+
   return (
     <footer className="border-t bg-background">
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <Shield className="h-6 w-6 text-Quantlink-cyan" />
-              <span className="text-lg font-bold gradient-text">ContractQuard</span>
+            <div className="flex items-center">
+              <img
+                src={getLogoSrc()}
+                alt="ContractQuard"
+                className="h-6 w-auto"
+              />
             </div>
             <p className="text-sm text-muted-foreground">
               AI-augmented smart contract security analysis tool by QuantLink.

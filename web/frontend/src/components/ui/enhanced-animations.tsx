@@ -4,17 +4,19 @@ import { ReactNode, useRef, useState, useEffect } from 'react'
 interface TypingAnimationProps {
   texts: string[]
   className?: string
+  style?: React.CSSProperties
   speed?: number
   deleteSpeed?: number
   delayBetween?: number
 }
 
-export function TypingAnimation({ 
-  texts, 
-  className = '', 
-  speed = 100, 
-  deleteSpeed = 50, 
-  delayBetween = 2000 
+export function TypingAnimation({
+  texts,
+  className = '',
+  style,
+  speed = 100,
+  deleteSpeed = 50,
+  delayBetween = 2000
 }: TypingAnimationProps) {
   const [currentTextIndex, setCurrentTextIndex] = useState(0)
   const [currentText, setCurrentText] = useState('')
@@ -51,7 +53,7 @@ export function TypingAnimation({
   }, [currentText, currentTextIndex, isDeleting, isWaiting, texts, speed, deleteSpeed, delayBetween])
 
   return (
-    <span className={className}>
+    <span className={className} style={style}>
       {currentText}
       <motion.span
         animate={{ opacity: [1, 0] }}

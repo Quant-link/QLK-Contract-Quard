@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import FileUpload from '../components/analysis/FileUpload'
 import AnalysisProgress from '../components/analysis/AnalysisProgress'
+import AnalysisSettings from '../components/analysis/AnalysisSettings'
 import { UploadedFile } from '../types'
 import { useToast } from '../hooks/use-toast'
 import { useAnalysis } from '../hooks/useAnalysis'
@@ -148,21 +149,7 @@ export default function AnalysisPage() {
         </TabsContent>
 
         <TabsContent value="settings" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Analysis Configuration</CardTitle>
-              <CardDescription>
-                Customize the security analysis settings for your smart contracts.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-center py-8 text-muted-foreground">
-                <Settings className="h-12 w-12 mx-auto mb-4" />
-                <p>Analysis settings will be available in a future update.</p>
-                <p className="text-sm">Currently using default security analysis configuration.</p>
-              </div>
-            </CardContent>
-          </Card>
+          <AnalysisSettings />
         </TabsContent>
       </Tabs>
 

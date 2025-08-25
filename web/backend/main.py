@@ -12,6 +12,10 @@ import re
 from pathlib import Path
 from typing import Optional, List
 import uvicorn
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 from fastapi import FastAPI, HTTPException, UploadFile, File, WebSocket, WebSocketDisconnect, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
@@ -57,8 +61,10 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
+        "http://localhost:3001",
         "http://localhost:5173",
         "http://frontend:3000",
+        "http://192.168.2.56:3000",
         "https://contractquard.com",
         "https://*.contractquard.com"
     ],

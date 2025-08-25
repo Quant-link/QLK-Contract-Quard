@@ -110,16 +110,7 @@ export default function CodeViewer({
     }
   }
 
-  const customStyle = {
-    ...((theme === 'dark' ? oneDark : oneLight) as any),
-    'pre[class*="language-"]': {
-      ...((theme === 'dark' ? oneDark : oneLight) as any)['pre[class*="language-"]'],
-      margin: 0,
-      padding: '1rem',
-      maxHeight: isExpanded ? 'none' : `${maxHeight}px`,
-      overflow: 'auto',
-    },
-  }
+
 
   const lineProps = (lineNumber: number) => {
     const lineFindings = findingsMap.get(lineNumber) || []
@@ -174,10 +165,11 @@ export default function CodeViewer({
   }
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
+    <Card className="overflow-hidden">
+      <CardHeader className="pb-3 border-b">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-medium">
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <span className="text-blue-600 dark:text-blue-400">&lt;/&gt;</span>
             {filename || `Code (${displayLanguage})`}
           </CardTitle>
           <div className="flex items-center space-x-2">
@@ -227,30 +219,50 @@ export default function CodeViewer({
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="relative">
-          <SyntaxHighlighter
-            language={displayLanguage}
-            style={customStyle}
-            showLineNumbers
-            lineProps={lineProps}
-            customStyle={{
-              margin: 0,
-              borderRadius: '0 0 0.5rem 0.5rem',
-            }}
-          >
-            {code}
-          </SyntaxHighlighter>
-          
+        <div className="relative overflow-hidden rounded-b-lg">
+          <div className={`${!isExpanded ? `max-h-[${maxHeight}px]` : ''} overflow-auto`}>
+            <SyntaxHighlighter
+              language={displayLanguage}
+              style={theme === 'dark' ? oneDark : oneLight}
+              showLineNumbers={true}
+              lineProps={lineProps}
+              customStyle={{
+                margin: 0,
+                padding: '1rem',
+                fontSize: '14px',
+                lineHeight: '1.6',
+                fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Monaco, Inconsolata, "Roboto Mono", monospace',
+                background: 'transparent',
+                borderRadius: 0,
+              }}
+              lineNumberStyle={{
+                minWidth: '3.5em',
+                paddingRight: '1em',
+                color: theme === 'dark' ? '#6b7280' : '#9ca3af',
+                borderRight: `1px solid ${theme === 'dark' ? '#374151' : '#e5e7eb'}`,
+                marginRight: '1em',
+                textAlign: 'right',
+                userSelect: 'none',
+                fontSize: '13px',
+                lineHeight: '1.6',
+              }}
+              wrapLines={true}
+              wrapLongLines={true}
+            >
+              {code}
+            </SyntaxHighlighter>
+          </div>
+
           {!isExpanded && code.split('\n').length > 20 && (
-            <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-background to-transparent flex items-end justify-center pb-2">
+            <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background via-background/80 to-transparent flex items-end justify-center pb-3">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setIsExpanded(true)}
-                className="bg-background"
+                className="bg-background shadow-lg border-2"
               >
                 <Maximize2 className="h-4 w-4 mr-2" />
-                Show More
+                Show More ({code.split('\n').length} lines)
               </Button>
             </div>
           )}
@@ -275,8 +287,8 @@ export default function CodeViewer({
                   <h5 className="font-medium mb-1">{finding.title}</h5>
                   <p className="text-sm text-muted-foreground mb-2">{finding.description}</p>
                   {finding.recommendation && (
-                    <div className="bg-blue-50 border border-blue-200 rounded p-2">
-                      <p className="text-sm text-blue-800">{finding.recommendation}</p>
+                    <div className="bg-blue-50 border border-blue-200 rounded p-2 dark:bg-blue-900/20 dark:border-blue-800">
+                      <p className="text-sm text-blue-800 dark:text-blue-300">{finding.recommendation}</p>
                     </div>
                   )}
                   {finding.cwe_id && (

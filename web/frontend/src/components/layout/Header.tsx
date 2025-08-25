@@ -1,7 +1,9 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Shield, Moon, Sun, Monitor } from 'lucide-react'
+import { Moon, Sun, Monitor } from 'lucide-react'
 import { Button } from '../ui/button'
 import { useTheme } from '../theme-provider'
+import LogoBlack from '../../assets/logos/logo-black.svg'
+import LogoWhite from '../../assets/logos/logo-white.svg'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,41 +14,63 @@ import NotificationCenter from '../notifications/NotificationCenter'
 
 export default function Header() {
   const location = useLocation()
-  const { setTheme } = useTheme()
+  const { theme, setTheme } = useTheme()
 
   const isActive = (path: string) => location.pathname === path
 
+  // Determine which logo to use based on theme
+  const getLogoSrc = () => {
+    if (theme === 'dark') {
+      return LogoWhite
+    } else if (theme === 'light') {
+      return LogoBlack
+    } else {
+      // System theme - check actual applied theme
+      const isDark = document.documentElement.classList.contains('dark')
+      return isDark ? LogoWhite : LogoBlack
+    }
+  }
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+      <div className="max-w-7xl mx-auto flex h-16 items-center justify-between px-6">
         {/* Logo and Brand */}
-        <Link to="/" className="flex items-center space-x-2">
-          <Shield className="h-8 w-8 text-Quantlink-cyan" />
-          <span className="text-xl font-bold gradient-text">ContractQuard</span>
+        <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
+          <img
+            src={getLogoSrc()}
+            alt="ContractQuard"
+            className="h-8 w-auto"
+          />
         </Link>
 
         {/* Navigation */}
-        <nav className="hidden md:flex items-center space-x-6">
+        <nav className="hidden md:flex items-center space-x-8">
           <Link
             to="/"
-            className={`text-sm font-medium transition-colors hover:text-primary ${
-              isActive('/') ? 'text-primary' : 'text-muted-foreground'
+            className={`text-sm font-medium transition-all duration-200 relative py-2 ${
+              isActive('/') ? 'nav-link-active' : 'text-muted-foreground hover:nav-link-hover'
             }`}
           >
             Home
+            {isActive('/') && (
+              <div className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full" style={{ backgroundColor: '#4dace1' }} />
+            )}
           </Link>
           <Link
             to="/analyze"
-            className={`text-sm font-medium transition-colors hover:text-primary ${
-              isActive('/analyze') ? 'text-primary' : 'text-muted-foreground'
+            className={`text-sm font-medium transition-all duration-200 relative py-2 ${
+              isActive('/analyze') ? 'nav-link-active' : 'text-muted-foreground hover:nav-link-hover'
             }`}
           >
             Analyze
+            {isActive('/analyze') && (
+              <div className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full" style={{ backgroundColor: '#4dace1' }} />
+            )}
           </Link>
         </nav>
 
         {/* Theme Toggle and Actions */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-4">
           <NotificationCenter />
 
           <DropdownMenu>
@@ -73,7 +97,7 @@ export default function Header() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button asChild variant="quantlink" className="hidden sm:inline-flex">
+          <Button asChild size="sm" className="btn-custom-primary font-medium px-6 hidden sm:inline-flex">
             <Link to="/analyze">Start Analysis</Link>
           </Button>
         </div>

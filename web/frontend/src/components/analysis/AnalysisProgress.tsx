@@ -72,9 +72,9 @@ export default function AnalysisProgress({
   const getStepIcon = (step: AnalysisStep) => {
     switch (step.status) {
       case 'completed':
-        return <CheckCircle className="h-5 w-5 text-green-500" />
+        return <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
       case 'in_progress':
-        return <Loader2 className="h-5 w-5 text-Quantlink-cyan animate-spin" />
+        return <Loader2 className="h-5 w-5 text-blue-600 dark:text-blue-400 animate-spin" />
       case 'error':
         return <AlertTriangle className="h-5 w-5 text-red-500" />
       default:
@@ -85,9 +85,9 @@ export default function AnalysisProgress({
   const getStepBadge = (step: AnalysisStep) => {
     switch (step.status) {
       case 'completed':
-        return <Badge variant="default" className="bg-green-100 text-green-800">Completed</Badge>
+        return <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">Completed</Badge>
       case 'in_progress':
-        return <Badge variant="default" className="bg-blue-100 text-blue-800">In Progress</Badge>
+        return <Badge variant="default" className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">In Progress</Badge>
       case 'error':
         return <Badge variant="destructive">Error</Badge>
       default:
@@ -129,10 +129,10 @@ export default function AnalysisProgress({
             <div
               key={step.id}
               className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
-                step.status === 'in_progress' 
-                  ? 'bg-blue-50 border-blue-200' 
+                step.status === 'in_progress'
+                  ? 'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800'
                   : step.status === 'completed'
-                  ? 'bg-green-50 border-green-200'
+                  ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800'
                   : 'bg-muted/30'
               }`}
             >

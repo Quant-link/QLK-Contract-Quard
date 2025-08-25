@@ -66,7 +66,26 @@ export interface UploadedFile {
   lastModified: number
 }
 
+// Enhanced Analysis Configuration
 export interface AnalysisConfig {
+  // Security Configuration
+  security_level: SecurityLevel
+  vulnerability_categories: VulnerabilityCategory[]
+  custom_rules: CustomRule[]
+
+  // Language-Specific Settings
+  language_settings: LanguageSettings
+
+  // Analysis Scope
+  analysis_scope: AnalysisScope
+
+  // Report Configuration
+  report_config: ReportConfig
+
+  // Notification Settings
+  notification_config: NotificationConfig
+
+  // Legacy fields (for backward compatibility)
   detectors?: Record<string, DetectorConfig>
   min_severity?: Finding['severity']
   include_test_files?: boolean
@@ -77,6 +96,143 @@ export interface DetectorConfig {
   enabled: boolean
   severity_override?: Finding['severity']
   custom_params?: Record<string, any>
+}
+
+export type SecurityLevel = 'basic' | 'standard' | 'advanced' | 'enterprise'
+
+export interface VulnerabilityCategory {
+  id: string
+  name: string
+  enabled: boolean
+  severity_threshold: Finding['severity']
+  description: string
+  detectors: string[]
+}
+
+export interface CustomRule {
+  id: string
+  name: string
+  description: string
+  pattern: string
+  severity: Finding['severity']
+  enabled: boolean
+  language?: 'solidity' | 'rust' | 'go' | 'all'
+}
+
+export interface LanguageSettings {
+  solidity: SoliditySettings
+  rust: RustSettings
+  go: GoSettings
+}
+
+export interface SoliditySettings {
+  compiler_version: string
+  evm_version: string
+  optimization_enabled: boolean
+  optimization_runs: number
+  enable_experimental_features: boolean
+  custom_imports: string[]
+}
+
+export interface RustSettings {
+  edition: '2018' | '2021'
+  target: string
+  features: string[]
+  no_default_features: boolean
+  enable_clippy: boolean
+  clippy_config: Record<string, any>
+}
+
+export interface GoSettings {
+  version: string
+  build_tags: string[]
+  cgo_enabled: boolean
+  race_detection: boolean
+  enable_vet: boolean
+  vet_config: Record<string, any>
+}
+
+export interface AnalysisScope {
+  type: 'full' | 'quick' | 'custom'
+  include_dependencies: boolean
+  include_test_files: boolean
+  include_examples: boolean
+  max_file_size_mb: number
+  max_lines_per_file: number
+  specific_functions?: string[]
+  specific_contracts?: string[]
+  exclude_patterns: string[]
+}
+
+export interface ReportConfig {
+  format: ReportFormat[]
+  detail_level: 'minimal' | 'standard' | 'detailed' | 'comprehensive'
+  include_code_snippets: boolean
+  include_recommendations: boolean
+  include_references: boolean
+  include_metrics: boolean
+  group_by_severity: boolean
+  group_by_category: boolean
+  custom_template?: string
+}
+
+export type ReportFormat = 'json' | 'pdf' | 'html' | 'markdown' | 'csv'
+
+export interface NotificationConfig {
+  email_notifications: EmailNotificationConfig
+  webhook_notifications: WebhookNotificationConfig
+  slack_notifications: SlackNotificationConfig
+  real_time_updates: boolean
+}
+
+export interface EmailNotificationConfig {
+  enabled: boolean
+  recipients: string[]
+  on_completion: boolean
+  on_critical_findings: boolean
+  on_errors: boolean
+  include_summary: boolean
+}
+
+export interface WebhookNotificationConfig {
+  enabled: boolean
+  url: string
+  secret?: string
+  events: WebhookEvent[]
+  retry_attempts: number
+  timeout_seconds: number
+}
+
+export type WebhookEvent = 'analysis_started' | 'analysis_completed' | 'analysis_failed' | 'critical_finding'
+
+export interface SlackNotificationConfig {
+  enabled: boolean
+  webhook_url: string
+  channel: string
+  username: string
+  on_completion: boolean
+  on_critical_findings: boolean
+}
+
+// Analysis Settings Store State
+export interface AnalysisSettingsState {
+  config: AnalysisConfig
+  presets: AnalysisPreset[]
+  current_preset: string | null
+  is_loading: boolean
+  is_saving: boolean
+  last_saved: string | null
+  validation_errors: Record<string, string[]>
+}
+
+export interface AnalysisPreset {
+  id: string
+  name: string
+  description: string
+  config: AnalysisConfig
+  is_default: boolean
+  created_at: string
+  updated_at: string
 }
 
 // Theme Types
