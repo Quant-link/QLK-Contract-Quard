@@ -72,10 +72,6 @@
     animation: glow 2s ease-in-out infinite alternate;
   }
 
-  .animate-bounce-slow {
-    animation: bounce 3s infinite;
-  }
-
   .gradient-text {
     @apply bg-gradient-to-r from-Quantlink-cyan to-Quantlink-teal bg-clip-text text-transparent;
   }
@@ -90,22 +86,6 @@
 
   .bg-gradient-conic {
     background: conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops));
-  }
-
-  .neon-blue {
-    box-shadow:
-      0 0 5px rgba(59, 130, 246, 0.5),
-      0 0 10px rgba(59, 130, 246, 0.5),
-      0 0 15px rgba(59, 130, 246, 0.5),
-      0 0 20px rgba(59, 130, 246, 0.5);
-  }
-
-  .neon-purple {
-    box-shadow:
-      0 0 5px rgba(147, 51, 234, 0.5),
-      0 0 10px rgba(147, 51, 234, 0.5),
-      0 0 15px rgba(147, 51, 234, 0.5),
-      0 0 20px rgba(147, 51, 234, 0.5);
   }
 }
 
@@ -170,28 +150,6 @@
   }
 }
 
-@keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
 .shimmer {
   background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
   background-size: 200px 100%;
@@ -200,12 +158,4 @@
 
 .animate-fade-in-up {
   animation: fadeInUp 0.6s ease-out;
-}
-
-.animate-slide-in-left {
-  animation: slideInLeft 0.6s ease-out;
-}
-
-.animate-slide-in-right {
-  animation: slideInRight 0.6s ease-out;
 }
