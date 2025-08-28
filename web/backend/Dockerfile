@@ -20,6 +20,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY src/ ./src/
 COPY web/backend/ ./web/backend/
 
+# Copy and set up entrypoint script
+COPY web/backend/entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
+
 # Set Python path
 ENV PYTHONPATH=/app/src:/app
 
@@ -35,6 +39,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/api/health || exit 1
 
-# Start the application
-EXPOSE 8000
-CMD ["sh", "-c", "python -m uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Start the application using entrypoint script
+CMD ["./entrypoint.sh"]
