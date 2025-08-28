@@ -53,4 +53,8 @@ if [ ! -f "main.py" ]; then
 fi
 
 echo "✅ main.py found, starting uvicorn..."
+echo "🐍 Python version: $(python --version)"
+echo "📦 Installed packages:"
+pip list | grep -E "(fastapi|uvicorn|sqlalchemy)" || echo "❌ Core packages not found!"
+
 exec python -m uvicorn main:app --host 0.0.0.0 --port $FINAL_PORT
