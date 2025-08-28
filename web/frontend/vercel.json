@@ -13,11 +13,11 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "https://contractquard-backend.railway.app/api/$1"
+      "dest": "https://qlk-contract-quard-production.up.railway.app/api/$1"
     },
     {
       "src": "/ws/(.*)",
-      "dest": "https://contractquard-backend.railway.app/ws/$1"
+      "dest": "https://qlk-contract-quard-production.up.railway.app/ws/$1"
     },
     {
       "src": "/(.*)",
