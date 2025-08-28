@@ -1,0 +1,20 @@
+# Minimal requirements for Railway deployment
+# Core FastAPI dependencies
+fastapi>=0.104.1
+uvicorn[standard]>=0.24.0
+python-multipart>=0.0.6
+pydantic>=2.5.0
+
+# Database
+sqlalchemy>=2.0.23
+alembic>=1.13.1
+
+# Basic utilities
+python-dotenv>=1.0.0
+requests>=2.31.0
+
+# Security
+cryptography>=41.0.0
+
+# Export (lightweight)
+reportlab>=4.0.0
