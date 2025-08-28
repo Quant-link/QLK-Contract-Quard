@@ -27,7 +27,8 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    sourcemap: false,
+    minify: 'esbuild',
     rollupOptions: {
       output: {
         manualChunks: {
@@ -39,6 +40,7 @@ export default defineConfig({
         },
       },
     },
+    chunkSizeWarningLimit: 1000,
   },
   define: {
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version),

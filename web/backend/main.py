@@ -53,18 +53,18 @@ app = FastAPI(
 # Security middleware
 app.add_middleware(
     TrustedHostMiddleware,
-    allowed_hosts=["localhost", "127.0.0.1", "*.contractquard.com"]
+    allowed_hosts=["localhost", "127.0.0.1", "*.contractquard.com", "*.railway.app", "*.vercel.app"]
 )
 
 # CORS middleware
+cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
+    allow_origins=cors_origins + [
         "http://localhost:3000",
         "http://localhost:3001",
         "http://localhost:5173",
-        "http://frontend:3000",
-        "http://192.168.2.56:3000",
+        "https://*.vercel.app",
         "https://contractquard.com",
         "https://*.contractquard.com"
     ],
