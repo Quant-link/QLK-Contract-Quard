@@ -1,0 +1,4 @@
+This file forces Railway to rebuild the Docker image completely.
+Timestamp: 2025-08-28 20:07:00
+Commit: af0937c
+Purpose: Fix PORT environment variable issue with entrypoint script
