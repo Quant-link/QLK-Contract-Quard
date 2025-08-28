@@ -1,4 +1,4 @@
-# Backend Dockerfile for ContractQuard API
+# Backend Dockerfile for ContractQuard API - Updated for Railway PORT fix
 FROM python:3.11-slim
 
 # Set working directory
