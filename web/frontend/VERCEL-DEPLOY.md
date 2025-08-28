@@ -29,6 +29,11 @@ VITE_MAX_FILE_SIZE_MB=10
 
 Click **"Deploy"** and wait for the build to complete.
 
+**Note**: If you get a vercel.json configuration error, you can use the minimal version:
+- Rename `vercel.json` to `vercel-full.json`
+- Rename `vercel-minimal.json` to `vercel.json`
+- Redeploy
+
 ### 4. Custom Domain (Optional)
 
 1. Go to your project settings in Vercel

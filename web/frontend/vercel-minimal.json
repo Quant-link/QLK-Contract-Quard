@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "name": "contractquard-frontend",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://qlk-contract-quard-production.up.railway.app/api/$1"
+    }
+  ],
+  "cleanUrls": true,
+  "trailingSlash": false
+}

@@ -10,20 +10,18 @@
       }
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "https://qlk-contract-quard-production.up.railway.app/api/$1"
+      "source": "/api/(.*)",
+      "destination": "https://qlk-contract-quard-production.up.railway.app/api/$1"
     },
     {
-      "src": "/ws/(.*)",
-      "dest": "https://qlk-contract-quard-production.up.railway.app/ws/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/ws/(.*)",
+      "destination": "https://qlk-contract-quard-production.up.railway.app/ws/$1"
     }
   ],
+  "cleanUrls": true,
+  "trailingSlash": false,
   "headers": [
     {
       "source": "/(.*)",
@@ -46,15 +44,9 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src 'self' fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https: wss:; frame-ancestors 'none';"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src 'self' fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https: wss: qlk-contract-quard-production.up.railway.app; frame-ancestors 'none';"
         }
       ]
     }
-  ],
-  "env": {
-    "VITE_API_BASE_URL": "@vite_api_base_url",
-    "VITE_WS_URL": "@vite_ws_url",
-    "VITE_APP_NAME": "ContractQuard",
-    "VITE_APP_VERSION": "0.1.0"
-  }
+  ]
 }
